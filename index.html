@@ -1,0 +1,1508 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>AntPost // Anterior · Posterior Tracker</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            display: ['Orbitron', 'sans-serif'],
+            body:    ['Rajdhani', 'sans-serif'],
+            mono:    ['Share Tech Mono', 'monospace'],
+          },
+          colors: {
+            cyber: {
+              amber:  '#f59e0b',
+              amberD: '#b45309',
+              amberG: '#fcd34d',
+              blue:   '#3b82f6',
+              blueD:  '#1d4ed8',
+              blueG:  '#93c5fd',
+              red:    '#ef4444',
+              green:  '#22c55e',
+              bg:     '#030712',
+              surface:'#0d1117',
+              card:   '#111827',
+              border: '#1f2937',
+              muted:  '#374151',
+            }
+          },
+          boxShadow: {
+            amber:    '0 0 20px rgba(245,158,11,0.25), 0 0 60px rgba(245,158,11,0.10)',
+            amberSm:  '0 0 10px rgba(245,158,11,0.30)',
+            blue:     '0 0 20px rgba(59,130,246,0.25), 0 0 60px rgba(59,130,246,0.10)',
+            blueSm:   '0 0 10px rgba(59,130,246,0.30)',
+            green:    '0 0 12px rgba(34,197,94,0.35)',
+            red:      '0 0 12px rgba(239,68,68,0.35)',
+          },
+          animation: {
+            'pulse-slow':   'pulse 3s cubic-bezier(0.4,0,0.6,1) infinite',
+            'scan':         'scan 4s linear infinite',
+            'glitch':       'glitch 6s step-end infinite',
+            'fade-in':      'fadeIn 0.4s ease forwards',
+            'slide-up':     'slideUp 0.35s ease forwards',
+          },
+          keyframes: {
+            scan: {
+              '0%':   { transform: 'translateY(-100%)' },
+              '100%': { transform: 'translateY(400%)' },
+            },
+            glitch: {
+              '0%, 95%, 100%': { transform: 'translate(0)' },
+              '96%':           { transform: 'translate(-2px, 1px)' },
+              '97%':           { transform: 'translate(2px, -1px)' },
+              '98%':           { transform: 'translate(-1px, 2px)' },
+            },
+            fadeIn:  { from: { opacity: '0' }, to: { opacity: '1' } },
+            slideUp: { from: { opacity: '0', transform: 'translateY(16px)' }, to: { opacity: '1', transform: 'translateY(0)' } },
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    * { box-sizing: border-box; }
+    html, body { background: #030712; color: #f3f4f6; font-family: 'Rajdhani', sans-serif; min-height: 100vh; }
+
+    /* Scrollbar styling */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: #0d1117; }
+    ::-webkit-scrollbar-thumb { background: #374151; border-radius: 2px; }
+    ::-webkit-scrollbar-thumb:hover { background: #f59e0b; }
+
+    /* Grid noise overlay */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background-image:
+        linear-gradient(rgba(245,158,11,0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(245,158,11,0.015) 1px, transparent 1px);
+      background-size: 48px 48px;
+    }
+
+    /* Scan line */
+    body::after {
+      content: '';
+      position: fixed; top: 0; left: 0; right: 0; height: 120px; z-index: 0; pointer-events: none;
+      background: linear-gradient(to bottom, transparent, rgba(245,158,11,0.03), transparent);
+      animation: scan 8s linear infinite;
+    }
+
+    #app { position: relative; z-index: 1; }
+
+    /* Clip-path accent corners */
+    .clip-card {
+      clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px));
+    }
+    .clip-card-sm {
+      clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+    }
+
+    /* Neon border variants */
+    .border-amber-glow { border-color: #f59e0b; box-shadow: 0 0 0 1px rgba(245,158,11,0.15) inset, 0 0 20px rgba(245,158,11,0.15); }
+    .border-blue-glow  { border-color: #3b82f6; box-shadow: 0 0 0 1px rgba(59,130,246,0.15) inset, 0 0 20px rgba(59,130,246,0.15); }
+
+    /* Input styles */
+    input[type=number] {
+      -moz-appearance: textfield;
+      background: #0d1117; border: 1px solid #1f2937; color: #f3f4f6;
+      font-family: 'Share Tech Mono', monospace; font-size: 15px;
+      padding: 6px 8px; width: 100%; border-radius: 4px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
+    input[type=number]:focus { outline: none; border-color: #f59e0b; box-shadow: 0 0 8px rgba(245,158,11,0.25); }
+    .posterior-mode input[type=number]:focus { border-color: #3b82f6; box-shadow: 0 0 8px rgba(59,130,246,0.25); }
+
+    input[type=date] {
+      background: #0d1117; border: 1px solid #1f2937; color: #f3f4f6;
+      font-family: 'Share Tech Mono', monospace; font-size: 14px;
+      padding: 6px 10px; border-radius: 4px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    input[type=date]:focus { outline: none; border-color: #f59e0b; box-shadow: 0 0 8px rgba(245,158,11,0.25); }
+    input[type=date]::-webkit-calendar-picker-indicator { filter: invert(0.7) sepia(1) saturate(5) hue-rotate(5deg); cursor: pointer; }
+
+    select {
+      background: #0d1117; border: 1px solid #1f2937; color: #f3f4f6;
+      font-family: 'Rajdhani', sans-serif; font-size: 15px; font-weight: 600;
+      padding: 8px 12px; border-radius: 4px; cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    select:focus { outline: none; border-color: #f59e0b; }
+    option { background: #111827; }
+
+    /* Day button active states */
+    .day-btn.active-anterior { background: rgba(245,158,11,0.15); border-color: #f59e0b; color: #fcd34d; box-shadow: 0 0 10px rgba(245,158,11,0.2); }
+    .day-btn.active-posterior { background: rgba(59,130,246,0.15); border-color: #3b82f6; color: #93c5fd; box-shadow: 0 0 10px rgba(59,130,246,0.2); }
+    .day-btn.active-rest { background: rgba(55,65,81,0.4); border-color: #4b5563; color: #9ca3af; }
+
+    /* Set row checked state */
+    .set-row.done { opacity: 0.55; }
+    .set-row.done td { text-decoration: line-through; }
+    .set-row.done .set-num { color: #22c55e; }
+
+    /* Progress bar */
+    .progress-bar-fill { transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+
+    /* Tabs */
+    .tab-btn { border-bottom: 2px solid transparent; transition: all 0.2s; }
+    .tab-btn.active-tab { border-bottom-color: #f59e0b; color: #fcd34d; }
+
+    /* Toast */
+    #toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+      z-index: 9999; transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+      pointer-events: none;
+    }
+    #toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* Modal backdrop */
+    #modal-backdrop { backdrop-filter: blur(4px); }
+
+    /* Comparison table */
+    .positive { color: #22c55e; }
+    .negative { color: #ef4444; }
+    .neutral  { color: #9ca3af; }
+
+    /* Animations */
+    .animate-slide-up { animation: slideUp 0.35s ease forwards; }
+    .animate-fade-in  { animation: fadeIn 0.4s ease forwards; }
+
+    /* Checkbox custom */
+    .check-btn {
+      width: 32px; height: 32px; border: 1.5px solid #374151;
+      border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s; flex-shrink: 0; touch-action: manipulation;
+    }
+    .check-btn:hover { border-color: #22c55e; background: rgba(34,197,94,0.08); }
+    .check-btn.checked { border-color: #22c55e; background: rgba(34,197,94,0.15); box-shadow: 0 0 8px rgba(34,197,94,0.3); }
+    .check-btn svg { display: none; }
+    .check-btn.checked svg { display: block; }
+
+    /* Mobile exercise card spacing */
+    @media (max-width: 640px) {
+      .exercise-table th, .exercise-table td { padding: 8px 6px; }
+    }
+
+    /* ── Stronger Design Enhancements ── */
+
+    /* Deeper card hover glow */
+    .exercise-card { transition: box-shadow 0.25s ease, transform 0.2s ease; }
+    .exercise-card:hover { transform: translateY(-1px); }
+    .anterior-mode .exercise-card:hover { box-shadow: 0 4px 32px rgba(245,158,11,0.12), 0 1px 0 rgba(245,158,11,0.2) inset; }
+    .posterior-mode .exercise-card:hover { box-shadow: 0 4px 32px rgba(59,130,246,0.12), 0 1px 0 rgba(59,130,246,0.2) inset; }
+
+    /* Muscle group divider band */
+    .muscle-group-header {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 0 6px;
+    }
+    .muscle-group-header .label {
+      font-family: 'Orbitron', sans-serif; font-size: 10px; font-weight: 700;
+      letter-spacing: 0.15em; padding: 3px 10px; border-radius: 3px;
+      white-space: nowrap;
+    }
+    .muscle-group-header .line { flex: 1; height: 1px; }
+
+    /* Stronger grid */
+    body::before {
+      background-size: 40px 40px;
+      background-image:
+        linear-gradient(rgba(245,158,11,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(245,158,11,0.025) 1px, transparent 1px);
+    }
+
+    /* Header border stronger */
+    header { border-bottom: 1px solid rgba(245,158,11,0.15) !important; }
+
+    /* Corner accent dots on cards */
+    .exercise-card::before {
+      content: ''; position: absolute; top: 0; right: 0;
+      width: 0; height: 0;
+      pointer-events: none; z-index: 2;
+    }
+
+    /* Input focus ring more dramatic */
+    input[type=number]:focus {
+      box-shadow: 0 0 0 1px rgba(245,158,11,0.4), 0 0 12px rgba(245,158,11,0.2) !important;
+    }
+    .posterior-mode input[type=number]:focus {
+      border-color: #3b82f6 !important;
+      box-shadow: 0 0 0 1px rgba(59,130,246,0.4), 0 0 12px rgba(59,130,246,0.2) !important;
+    }
+
+    /* Finish button stronger pulse on hover */
+    #finish-btn:hover { letter-spacing: 0.12em; }
+
+    /* Number inputs — monospaced centered */
+    input[type=number] { text-align: center; }
+
+    /* Day selector stronger active */
+    .day-btn { transition: all 0.18s ease; }
+    .day-btn:hover { background: rgba(245,158,11,0.06); border-color: #4b5563; color: #d1d5db; }
+
+    /* Nav buttons font */
+    .nav-btn { font-family: 'Orbitron', sans-serif; font-size: 9px; font-weight: 700; letter-spacing: 0.1em; padding: 5px 8px; }
+
+    /* Stronger section markers */
+    .section-marker {
+      position: relative;
+      padding-left: 12px;
+    }
+    .section-marker::before {
+      content: ''; position: absolute; left: 0; top: 50%;
+      transform: translateY(-50%);
+      width: 3px; height: 12px; background: #f59e0b; border-radius: 2px;
+    }
+  </style>
+</head>
+<body>
+
+<div id="app" class="min-h-screen pb-20">
+
+  <!-- ═══════════════════ HEADER ═══════════════════ -->
+  <header class="sticky top-0 z-50 bg-cyber-bg/90 backdrop-blur-md border-b border-cyber-border">
+    <div class="max-w-5xl mx-auto px-4 py-3">
+      <div class="flex items-center justify-between gap-4">
+
+        <!-- Logo -->
+        <div class="flex items-center gap-3 min-w-0">
+          <div class="relative flex-shrink-0">
+            <div class="w-9 h-9 bg-cyber-amber/10 border border-cyber-amber/40 clip-card-sm flex items-center justify-center">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M6 4v16M18 4v16M1 12h4M19 12h4M6 8h12M6 16h12"/>
+              </svg>
+            </div>
+            <span class="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-cyber-amber animate-pulse-slow"></span>
+          </div>
+          <div>
+            <h1 class="font-display text-sm sm:text-base font-black tracking-widest text-cyber-amber leading-none animate-glitch">AntPost</h1>
+            <p class="font-mono text-[9px] text-cyber-muted tracking-widest leading-none mt-0.5">ANT · POST TRACKER</p>
+          </div>
+        </div>
+
+        <!-- Date, Greeting & Nav -->
+        <div class="flex items-center gap-3 flex-shrink-0">
+          <div class="hidden sm:flex flex-col items-end">
+            <span id="header-date" class="font-mono text-[10px] text-gray-500 tracking-wide"></span>
+            <span class="font-mono text-[11px] text-amber-400/80 tracking-widest font-bold">Hi, Lawaty 👊</span>
+          </div>
+          <!-- Tab Navigation -->
+          <div class="flex items-center gap-1 bg-cyber-surface border border-cyber-border rounded p-1">
+            <button onclick="App.switchView('workout')" id="nav-workout"
+              class="nav-btn px-2.5 py-1 text-xs font-body font-700 rounded transition-all tracking-wide">
+              WORKOUT
+            </button>
+            <button onclick="App.switchView('history')" id="nav-history"
+              class="nav-btn px-2.5 py-1 text-xs font-body font-700 rounded transition-all tracking-wide">
+              HISTORY
+            </button>
+            <button onclick="App.switchView('analytics')" id="nav-analytics"
+              class="nav-btn px-2.5 py-1 text-xs font-body font-700 rounded transition-all tracking-wide">
+              ANALYTICS
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- ═══════════════════ MAIN ═══════════════════ -->
+  <main class="max-w-5xl mx-auto px-4 pt-5">
+
+    <!-- Mobile greeting (visible only on small screens) -->
+    <div class="sm:hidden mb-4 flex items-center justify-between px-3 py-2 bg-amber-500/5 border border-amber-500/15 rounded-lg">
+      <span class="font-mono text-xs text-amber-400/80 font-bold tracking-widest">Hi, Lawaty 👊</span>
+      <span id="header-date-mobile" class="font-mono text-[10px] text-gray-600 tracking-wide"></span>
+    </div>
+
+    <!-- ─── WORKOUT VIEW ─── -->
+    <div id="view-workout" class="view-panel animate-fade-in">
+
+      <!-- Day Selector -->
+      <section class="mb-6">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="font-mono text-xs text-cyber-muted tracking-widest">// SELECT DAY</span>
+          <div class="flex-1 h-px bg-cyber-border"></div>
+        </div>
+        <div id="day-selector" class="grid grid-cols-7 gap-1.5">
+          <!-- Injected by JS -->
+        </div>
+      </section>
+
+      <!-- Workout Type Selector -->
+      <section id="workout-type-section" class="mb-6">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="font-mono text-xs text-cyber-muted tracking-widest">// WORKOUT TYPE</span>
+          <div class="flex-1 h-px bg-cyber-border"></div>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <button id="btn-anterior" onclick="App.setWorkoutType('anterior')"
+            class="type-btn flex items-center gap-2 px-4 py-2.5 border border-cyber-border rounded font-body font-semibold text-sm tracking-wider transition-all duration-200">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            ANTERIOR / الأمامي
+          </button>
+          <button id="btn-posterior" onclick="App.setWorkoutType('posterior')"
+            class="type-btn flex items-center gap-2 px-4 py-2.5 border border-cyber-border rounded font-body font-semibold text-sm tracking-wider transition-all duration-200">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            POSTERIOR / الخلفي
+          </button>
+          <button id="btn-rest" onclick="App.setWorkoutType('rest')"
+            class="type-btn flex items-center gap-2 px-4 py-2.5 border border-cyber-border rounded font-body font-semibold text-sm tracking-wider transition-all duration-200">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8zM6 1v3M10 1v3M14 1v3"/></svg>
+            REST DAY
+          </button>
+        </div>
+      </section>
+
+      <!-- Progress Bar -->
+      <section id="progress-section" class="mb-6 hidden">
+        <div class="flex items-center justify-between mb-2">
+          <span class="font-mono text-xs text-cyber-muted tracking-widest">// SESSION PROGRESS</span>
+          <span id="progress-text" class="font-mono text-xs text-gray-300"></span>
+        </div>
+        <div class="h-1.5 bg-cyber-surface rounded-full overflow-hidden border border-cyber-border">
+          <div id="progress-bar" class="h-full rounded-full progress-bar-fill" style="width:0%"></div>
+        </div>
+      </section>
+
+      <!-- Rest Day Card -->
+      <div id="rest-day-card" class="hidden animate-slide-up">
+        <div class="bg-cyber-card border border-cyber-muted/30 rounded-lg p-8 text-center clip-card relative overflow-hidden">
+          <div class="absolute inset-0 bg-gradient-to-br from-cyber-muted/5 to-transparent pointer-events-none"></div>
+          <div class="relative">
+            <div class="w-16 h-16 mx-auto mb-4 bg-cyber-muted/10 rounded-full flex items-center justify-center">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="1.5">
+                <path d="M12 2a5 5 0 1 0 5 5 5 5 0 0 0-5-5zm0 8a3 3 0 1 1 3-3 3 3 0 0 1-3 3zm9 11v-1a7 7 0 0 0-7-7h-4a7 7 0 0 0-7 7v1"/>
+              </svg>
+            </div>
+            <h2 class="font-display text-xl font-bold text-gray-300 mb-2 tracking-widest">REST &amp; RECOVER</h2>
+            <p class="font-body text-gray-500 text-base leading-relaxed max-w-sm mx-auto">
+              Recovery is where gains happen. Your muscles are rebuilding stronger. Stay hydrated, eat well, sleep deep.
+            </p>
+            <div class="mt-6 grid grid-cols-3 gap-3 max-w-xs mx-auto">
+              <div class="bg-cyber-surface border border-cyber-border rounded p-3 text-center">
+                <div class="font-mono text-lg font-bold text-gray-300">8h</div>
+                <div class="font-mono text-[10px] text-gray-600 mt-0.5">SLEEP</div>
+              </div>
+              <div class="bg-cyber-surface border border-cyber-border rounded p-3 text-center">
+                <div class="font-mono text-lg font-bold text-gray-300">3L</div>
+                <div class="font-mono text-[10px] text-gray-600 mt-0.5">WATER</div>
+              </div>
+              <div class="bg-cyber-surface border border-cyber-border rounded p-3 text-center">
+                <div class="font-mono text-lg font-bold text-gray-300">✓</div>
+                <div class="font-mono text-[10px] text-gray-600 mt-0.5">PROTEIN</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Exercises Container -->
+      <div id="exercises-container" class="hidden space-y-5 animate-slide-up">
+
+        <!-- Workout Header -->
+        <div id="workout-header" class="flex items-center gap-3">
+          <div id="workout-badge" class="flex items-center gap-2 px-3 py-1.5 rounded font-mono text-xs font-bold tracking-widest border"></div>
+          <div class="flex-1 h-px bg-cyber-border"></div>
+          <span id="workout-date-label" class="font-mono text-xs text-cyber-muted"></span>
+        </div>
+
+        <!-- Exercise Cards Injected Here -->
+        <div id="exercise-cards-list" class="space-y-4"></div>
+
+        <!-- Finish Workout Button -->
+        <div class="pt-4 pb-2">
+          <button onclick="App.finishWorkout()"
+            id="finish-btn"
+            class="w-full py-4 font-display text-sm font-bold tracking-widest uppercase rounded border transition-all duration-300 relative overflow-hidden group">
+            <span class="relative z-10 flex items-center justify-center gap-2">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              FINISH &amp; SAVE WORKOUT
+            </span>
+            <span class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transform transition-transform duration-700"></span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ─── HISTORY VIEW ─── -->
+    <div id="view-history" class="view-panel hidden animate-fade-in">
+      <div class="mb-6 flex items-center gap-3">
+        <span class="font-mono text-xs text-cyber-muted tracking-widest">// WORKOUT HISTORY</span>
+        <div class="flex-1 h-px bg-cyber-border"></div>
+        <button onclick="App.clearHistory()" class="font-mono text-xs text-red-500/70 hover:text-red-400 transition-colors tracking-wide">CLEAR ALL</button>
+      </div>
+      <div id="history-list" class="space-y-3">
+        <!-- Injected by JS -->
+      </div>
+    </div>
+
+    <!-- ─── ANALYTICS VIEW ─── -->
+    <div id="view-analytics" class="view-panel hidden animate-fade-in">
+      <div class="mb-6 flex items-center gap-2">
+        <span class="font-mono text-xs text-cyber-muted tracking-widest">// ANALYTICS ENGINE</span>
+        <div class="flex-1 h-px bg-cyber-border"></div>
+      </div>
+
+      <!-- Date Range Picker -->
+      <div class="bg-cyber-card border border-cyber-border rounded-lg p-4 mb-6 clip-card-sm">
+        <p class="font-mono text-xs text-cyber-muted tracking-widest mb-3">// DATE RANGE FILTER</p>
+        <div class="flex flex-wrap items-center gap-3">
+          <div class="flex items-center gap-2">
+            <label class="font-mono text-xs text-gray-500">FROM</label>
+            <input type="date" id="analytics-start" />
+          </div>
+          <div class="flex items-center gap-2">
+            <label class="font-mono text-xs text-gray-500">TO</label>
+            <input type="date" id="analytics-end" />
+          </div>
+          <button onclick="App.runAnalytics()"
+            class="px-4 py-2 bg-cyber-amber/10 border border-cyber-amber/50 text-cyber-amber font-mono text-xs font-bold tracking-widest rounded hover:bg-cyber-amber/20 transition-all hover:shadow-amberSm">
+            RUN ANALYSIS
+          </button>
+        </div>
+      </div>
+
+      <!-- Analytics Output -->
+      <div id="analytics-output">
+        <div class="text-center py-16 text-gray-600">
+          <svg class="mx-auto mb-4 opacity-30" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          <p class="font-mono text-sm tracking-widest">SET A DATE RANGE TO RUN ANALYSIS</p>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ═══════════════════ TOAST ═══════════════════ -->
+<div id="toast">
+  <div id="toast-inner" class="flex items-center gap-3 px-5 py-3 bg-cyber-card border rounded-lg font-mono text-sm font-bold tracking-wide shadow-lg">
+    <span id="toast-icon"></span>
+    <span id="toast-msg"></span>
+  </div>
+</div>
+
+<!-- ═══════════════════ HISTORY DETAIL MODAL ═══════════════════ -->
+<div id="modal-backdrop" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70 p-4" onclick="App.closeModal(event)">
+  <div id="modal-content" class="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-cyber-card border border-cyber-border rounded-lg clip-card" onclick="event.stopPropagation()">
+    <div class="p-5">
+      <div class="flex items-center justify-between mb-4">
+        <h3 id="modal-title" class="font-display text-sm font-bold tracking-widest text-gray-200"></h3>
+        <button onclick="App.closeModal()" class="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-gray-200 transition-colors">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div id="modal-body"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ MAIN APP SCRIPT ═══════════════════ -->
+<script>
+/* ================================================================
+   ANTPOST GYM TRACKER — ANTERIOR / POSTERIOR SPLIT
+   ================================================================ */
+
+'use strict';
+
+// ── EXERCISE DATABASE ──────────────────────────────────────────
+// القاعدة: كل تمرين بكارت منفصل — مفيش دمج بين التمارين
+const EXERCISE_DB = {
+  anterior: {
+    label:    'ANTERIOR // الأمامي',
+    color:    'amber',
+    accent:   '#f59e0b',
+    dimAccent:'#b45309',
+    exercises: [
+      // ── صدر ──────────────────────────
+      {
+        id:     'flat-bench-press',
+        name:   'Flat Bench Press',
+        arabic: 'بنش فلات',
+        muscle: 'Chest',
+        target: '2 × 8-12 Reps',
+        sets:   2,
+      },
+      {
+        id:     'incline-bench-press',
+        name:   'Incline Bench Press',
+        arabic: 'بنش مائل',
+        muscle: 'Chest',
+        target: '2 × 8-12 Reps',
+        sets:   2,
+      },
+      {
+        id:     'butterfly',
+        name:   'Butterfly (Pec Deck)',
+        arabic: 'فراشة / بيك ديك',
+        muscle: 'Chest',
+        target: '2 × 10-12 Reps',
+        sets:   2,
+      },
+      // ── كتف ──────────────────────────
+      {
+        id:     'shoulder-press-machine',
+        name:   'Shoulder Press Machine',
+        arabic: 'ضغط أكتاف بالجهاز',
+        muscle: 'Shoulders',
+        target: '2 × 8-12 Reps',
+        sets:   2,
+      },
+      {
+        id:     'lateral-dumbbell-raises',
+        name:   'Lateral Dumbbell Raises',
+        arabic: 'رفع جانبي دمبلز',
+        muscle: 'Shoulders',
+        target: '2 × 12-15 Reps',
+        sets:   2,
+      },
+      {
+        id:     'front-dumbbell-raises',
+        name:   'Front Dumbbell Raises',
+        arabic: 'رفع أمامي دمبلز',
+        muscle: 'Shoulders',
+        target: '2 × 12-15 Reps',
+        sets:   2,
+      },
+      // ── تراي ──────────────────────────
+      {
+        id:     'rope-pushdown',
+        name:   'Rope Pushdown',
+        arabic: 'دفع حبل سفلي',
+        muscle: 'Triceps',
+        target: '2 × 10-12 Reps',
+        sets:   2,
+      },
+      {
+        id:     'cable-overhead-extension',
+        name:   'Cable Overhead Extension',
+        arabic: 'تمديد تراي علوي بالكابل',
+        muscle: 'Triceps',
+        target: '2 × 10-12 Reps',
+        sets:   2,
+      },
+      // ── بطن ──────────────────────────
+      {
+        id:     'crunches',
+        name:   'Crunches',
+        arabic: 'كرنشات',
+        muscle: 'Abs',
+        target: '2 × 15-20 Reps',
+        sets:   2,
+      },
+      {
+        id:     'rope-weighted-cable-crunches',
+        name:   'Rope Weighted Cable Crunches',
+        arabic: 'كرنشات بالحبل والكابل',
+        muscle: 'Abs',
+        target: '2 × 15 Reps',
+        sets:   2,
+      },
+      // ── رجل أمامي ──────────────────────────
+      {
+        id:     'leg-extension',
+        name:   'Leg Extension / Leg Press',
+        arabic: 'مد أرجل / ضغط أرجل',
+        muscle: 'Quads',
+        target: '2 × 10-12 Reps',
+        sets:   2,
+      },
+    ]
+  },
+  posterior: {
+    label:    'POSTERIOR // الخلفي',
+    color:    'blue',
+    accent:   '#3b82f6',
+    dimAccent:'#1d4ed8',
+    exercises: [
+      // ── ضهر ──────────────────────────
+      {
+        id:     'lat-pulldown',
+        name:   'Lat Pulldown',
+        arabic: 'شد أمامي',
+        muscle: 'Back — Lats',
+        target: '2 × 8-12 Reps',
+        sets:   2,
+      },
+      {
+        id:     'cable-row',
+        name:   'Cable Row',
+        arabic: 'رووينج كابل',
+        muscle: 'Back — Mid',
+        target: '2 × 8-10 Reps',
+        sets:   2,
+      },
+      {
+        id:     'straight-arm-pulldown',
+        name:   'Straight-Arm Pulldown',
+        arabic: 'شد مستقيم الذراع',
+        muscle: 'Back — Lats',
+        target: '2 × 10-12 Reps',
+        sets:   2,
+      },
+      {
+        id:     'face-pull',
+        name:   'Face Pull',
+        arabic: 'فيس بول',
+        muscle: 'Upper Back',
+        target: '2 × 12-15 Reps',
+        sets:   2,
+      },
+      {
+        id:     'back-extension',
+        name:   'Back Extension',
+        arabic: 'تمديد ظهر',
+        muscle: 'Lower Back',
+        target: '2 × 12-15 Reps',
+        sets:   2,
+      },
+      // ── رجل خلفي ──────────────────────────
+      {
+        id:     'seated-leg-curl',
+        name:   'Seated Leg Curl',
+        arabic: 'كيرل أرجل جالس',
+        muscle: 'Hamstrings',
+        target: '2 × 10-12 Reps',
+        sets:   2,
+      },
+      // ── سمانة ──────────────────────────
+      {
+        id:     'calf-raises',
+        name:   'Calf Raises',
+        arabic: 'سمانة',
+        muscle: 'Calves',
+        target: '2 × 15-20 Reps',
+        sets:   2,
+      },
+      // ── كتف خلفي ──────────────────────────
+      {
+        id:     'reverse-fly',
+        name:   'Reverse Fly (Pec Deck)',
+        arabic: 'فراشة عكسية',
+        muscle: 'Rear Delts',
+        target: '2 × 12-15 Reps',
+        sets:   2,
+      },
+      // ── باي ──────────────────────────
+      {
+        id:     'close-grip-cable-curl',
+        name:   'Close Grip Cable Curl',
+        arabic: 'كيرل كابل قبضة ضيقة',
+        muscle: 'Biceps',
+        target: '2 × 10-12 Reps',
+        sets:   2,
+      },
+      {
+        id:     'dumbbell-preacher-curl',
+        name:   'Dumbbell Preacher Curl',
+        arabic: 'بريتشر كيرل دمبلز',
+        muscle: 'Biceps',
+        target: '2 × 10-12 Reps',
+        sets:   2,
+      },
+    ]
+  }
+};
+
+const DAYS = ['Saturday','Sunday','Monday','Tuesday','Wednesday','Thursday','Friday'];
+const DAY_SHORT = ['SAT','SUN','MON','TUE','WED','THU','FRI'];
+
+// ── STATE ──────────────────────────────────────────────────────
+const State = {
+  currentDay:     DAYS[0],
+  currentView:    'workout',
+  workoutTypes:   {},   // { dayName: 'anterior' | 'posterior' | 'rest' }
+  sessionData:    {},   // { dayName: { exerciseId: { setIndex: { weight, reps, done } } } }
+  history:        [],   // [{ id, date, day, type, exercises: [...], timestamp }]
+
+  init() {
+    this.workoutTypes  = JSON.parse(localStorage.getItem('apex_workout_types') || '{}');
+    this.sessionData   = JSON.parse(localStorage.getItem('apex_session_data')  || '{}');
+    this.history       = JSON.parse(localStorage.getItem('apex_history')       || '[]');
+
+    // Determine current day
+    const jsDay = new Date().getDay(); // 0=Sun
+    // Map: Sun=1 Mon=2 Tue=3 Wed=4 Thu=5 Fri=6 Sat=0
+    const dayMap = { 6: 0, 0: 1, 1: 2, 2: 3, 3: 4, 4: 5, 5: 6 };
+    this.currentDay = DAYS[dayMap[jsDay] ?? 0];
+  },
+
+  save() {
+    localStorage.setItem('apex_workout_types', JSON.stringify(this.workoutTypes));
+    localStorage.setItem('apex_session_data',  JSON.stringify(this.sessionData));
+    localStorage.setItem('apex_history',       JSON.stringify(this.history));
+  },
+
+  getType(day) { return this.workoutTypes[day] || null; },
+
+  setType(day, type) {
+    this.workoutTypes[day] = type;
+    this.save();
+  },
+
+  getSetData(day, exId, setIdx) {
+    return this.sessionData?.[day]?.[exId]?.[setIdx] || { weight: '', reps: '', done: false };
+  },
+
+  updateSet(day, exId, setIdx, field, value) {
+    if (!this.sessionData[day])         this.sessionData[day] = {};
+    if (!this.sessionData[day][exId])   this.sessionData[day][exId] = {};
+    if (!this.sessionData[day][exId][setIdx]) this.sessionData[day][exId][setIdx] = { weight:'', reps:'', done:false };
+    this.sessionData[day][exId][setIdx][field] = value;
+    this.save();
+  },
+
+  clearDay(day) {
+    delete this.sessionData[day];
+    this.save();
+  }
+};
+
+// ── APP CONTROLLER ─────────────────────────────────────────────
+const App = {
+
+  // ── Init ──
+  init() {
+    State.init();
+    this.renderHeader();
+    this.renderDaySelector();
+    this.renderWorkoutView();
+    this.switchView('workout');
+    this.updateNavStyles();
+  },
+
+  // ── Header date ──
+  renderHeader() {
+    const now  = new Date();
+    const opts = { weekday:'long', year:'numeric', month:'short', day:'numeric' };
+    const str  = now.toLocaleDateString('en-US', opts).toUpperCase();
+    const el   = document.getElementById('header-date');
+    if (el) el.textContent = str;
+    const el2  = document.getElementById('header-date-mobile');
+    if (el2) el2.textContent = str;
+  },
+
+  // ── Day Selector ──
+  renderDaySelector() {
+    const container = document.getElementById('day-selector');
+    container.innerHTML = '';
+    DAYS.forEach((day, i) => {
+      const type = State.getType(day);
+      const isActive = day === State.currentDay;
+      let activeClass = '';
+      if (isActive) {
+        if (type === 'anterior')  activeClass = 'active-anterior';
+        else if (type === 'posterior') activeClass = 'active-posterior';
+        else if (type === 'rest') activeClass = 'active-rest';
+        else activeClass = 'border-gray-600 text-gray-300 bg-cyber-surface';
+      }
+      const dot = type
+        ? `<span class="absolute -top-1 -right-1 w-1.5 h-1.5 rounded-full ${type==='anterior'?'bg-amber-400':type==='posterior'?'bg-blue-400':'bg-gray-500'}"></span>`
+        : '';
+      container.innerHTML += `
+        <button
+          onclick="App.selectDay('${day}')"
+          class="day-btn relative flex flex-col items-center gap-1 py-2.5 px-1 rounded border border-cyber-border text-xs font-mono tracking-wide transition-all duration-200 hover:border-gray-500 ${isActive ? activeClass : 'text-gray-500'}"
+        >
+          ${dot}
+          <span class="font-bold text-[11px]">${DAY_SHORT[i]}</span>
+        </button>`;
+    });
+  },
+
+  selectDay(day) {
+    State.currentDay = day;
+    this.renderDaySelector();
+    this.renderWorkoutView();
+  },
+
+  // ── Workout Type Buttons ──
+  setWorkoutType(type) {
+    State.setType(State.currentDay, type);
+    this.renderDaySelector();
+    this.renderWorkoutView();
+    App.toast(
+      type === 'anterior'  ? '🔥 Anterior workout set' :
+      type === 'posterior' ? '⚡ Posterior workout set' :
+      '💤 Rest day logged',
+      type === 'rest' ? 'neutral' : 'success'
+    );
+  },
+
+  renderWorkoutType() {
+    const type = State.getType(State.currentDay);
+    // Update type button styles
+    ['anterior','posterior','rest'].forEach(t => {
+      const btn = document.getElementById(`btn-${t}`);
+      if (!btn) return;
+      btn.className = btn.className
+        .replace(/ text-amber-\w+/g,'').replace(/ text-blue-\w+/g,'').replace(/ text-gray-\w+/g,'')
+        .replace(/ border-amber-\w+/g,'').replace(/ border-blue-\w+/g,'').replace(/ border-gray-\w+/g,'')
+        .replace(/ bg-\S+/g,'').replace(/ shadow-\S+/g,'');
+      btn.classList.add('border-cyber-border','text-gray-500','bg-transparent');
+      if (t === type) {
+        btn.classList.remove('border-cyber-border','text-gray-500');
+        if (t === 'anterior')  { btn.classList.add('border-amber-500','text-amber-400','bg-amber-500/10','shadow-amberSm'); }
+        if (t === 'posterior') { btn.classList.add('border-blue-500','text-blue-400','bg-blue-500/10','shadow-blueSm'); }
+        if (t === 'rest')      { btn.classList.add('border-gray-600','text-gray-300','bg-gray-700/20'); }
+      }
+    });
+  },
+
+  // ── Workout View ──
+  renderWorkoutView() {
+    const type = State.getType(State.currentDay);
+    const restCard     = document.getElementById('rest-day-card');
+    const exercisesDiv = document.getElementById('exercises-container');
+    const progressSec  = document.getElementById('progress-section');
+
+    restCard.classList.add('hidden');
+    exercisesDiv.classList.add('hidden');
+    progressSec.classList.add('hidden');
+
+    this.renderWorkoutType();
+
+    if (!type) return;
+
+    if (type === 'rest') {
+      restCard.classList.remove('hidden');
+      return;
+    }
+
+    const workout = EXERCISE_DB[type];
+    if (!workout) return;
+
+    // Workout header
+    const badge = document.getElementById('workout-badge');
+    const isAmber = type === 'anterior';
+    badge.className = `flex items-center gap-2 px-3 py-1.5 rounded font-mono text-xs font-bold tracking-widest border ${
+      isAmber ? 'border-amber-500/50 text-amber-400 bg-amber-500/10' : 'border-blue-500/50 text-blue-400 bg-blue-500/10'
+    }`;
+    badge.innerHTML = `
+      <span class="w-1.5 h-1.5 rounded-full ${isAmber ? 'bg-amber-400' : 'bg-blue-400'} animate-pulse-slow"></span>
+      ${workout.label}
+    `;
+    document.getElementById('workout-date-label').textContent = State.currentDay.toUpperCase();
+
+    // Finish button style
+    const finishBtn = document.getElementById('finish-btn');
+    finishBtn.className = finishBtn.className
+      .replace(/border-\S+/g,'').replace(/text-\S+/g,'').replace(/bg-\S+/g,'').replace(/shadow-\S+/g,'').replace(/hover:shadow-\S+/g,'').trim();
+    finishBtn.className += isAmber
+      ? ' w-full py-4 font-display text-sm font-bold tracking-widest uppercase rounded border border-amber-500/50 text-amber-400 bg-amber-500/5 hover:bg-amber-500/15 hover:shadow-amberSm transition-all duration-300 relative overflow-hidden group'
+      : ' w-full py-4 font-display text-sm font-bold tracking-widest uppercase rounded border border-blue-500/50 text-blue-400 bg-blue-500/5 hover:bg-blue-500/15 hover:shadow-blueSm transition-all duration-300 relative overflow-hidden group';
+
+    // Render cards
+    this.renderExerciseCards(type, workout);
+
+    exercisesDiv.classList.remove('hidden');
+    progressSec.classList.remove('hidden');
+    this.updateProgress(type);
+  },
+
+  // ── Exercise Cards ──
+  renderExerciseCards(type, workout) {
+    const container = document.getElementById('exercise-cards-list');
+    container.innerHTML = '';
+
+    // Add mode class to exercises container for CSS targeting
+    const exDiv = document.getElementById('exercises-container');
+    exDiv.classList.remove('anterior-mode','posterior-mode');
+    exDiv.classList.add(type === 'anterior' ? 'anterior-mode' : 'posterior-mode');
+
+    const isAmber = type === 'anterior';
+    const accentBorder  = isAmber ? 'border-amber-500/30' : 'border-blue-500/30';
+    const accentHeader  = isAmber ? 'border-amber-500/20 bg-amber-500/5' : 'border-blue-500/20 bg-blue-500/5';
+    const accentBadge   = isAmber ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-blue-500/10 text-blue-400 border-blue-500/20';
+    const accentNum     = isAmber ? 'text-amber-500' : 'text-blue-500';
+    const accentColor   = isAmber ? '#f59e0b' : '#3b82f6';
+    const accentDim     = isAmber ? 'rgba(245,158,11,0.2)' : 'rgba(59,130,246,0.2)';
+    const accentFaint   = isAmber ? 'rgba(245,158,11,0.08)' : 'rgba(59,130,246,0.08)';
+
+    // ── Group exercises by muscle for section headers ──
+    let lastMuscleGroup = null;
+    let cardIndex = 0;
+
+    workout.exercises.forEach((ex) => {
+      // Normalize muscle group label for grouping
+      const groupKey = ex.muscle.split(' — ')[0].split(' / ')[0].split(' ')[0]; // e.g. "Chest", "Shoulders", "Triceps"
+      const isNewGroup = groupKey !== lastMuscleGroup;
+
+      if (isNewGroup) {
+        lastMuscleGroup = groupKey;
+        // Muscle group section header
+        container.innerHTML += `
+          <div class="muscle-group-header" style="animation-delay:${cardIndex * 0.04}s">
+            <span class="label" style="color:${accentColor}; background:${accentFaint}; border: 1px solid ${accentDim};">${ex.muscle.toUpperCase()}</span>
+            <span class="line" style="background: linear-gradient(to right, ${accentDim}, transparent);"></span>
+          </div>`;
+      }
+
+      // Build set rows HTML
+      let setRowsHtml = '';
+      for (let s = 0; s < ex.sets; s++) {
+        const setData = State.getSetData(State.currentDay, ex.id, s);
+        const doneClass = setData.done ? 'done' : '';
+        setRowsHtml += `
+          <tr class="set-row border-b border-cyber-border/50 last:border-0 ${doneClass}" id="set-row-${ex.id}-${s}">
+            <td class="py-2.5 px-3 w-10">
+              <span class="set-num font-mono text-xs font-bold ${accentNum} ${setData.done ? '!text-green-400' : ''}">${s + 1}</span>
+            </td>
+            <td class="py-2.5 px-2">
+              <input
+                type="number"
+                min="0" max="999" step="0.5"
+                placeholder="—"
+                value="${setData.weight}"
+                aria-label="Weight kg set ${s+1} of ${ex.name}"
+                onchange="App.updateSetField('${ex.id}', ${s}, 'weight', this.value)"
+                oninput="App.updateSetField('${ex.id}', ${s}, 'weight', this.value)"
+              />
+            </td>
+            <td class="py-2.5 px-2">
+              <input
+                type="number"
+                min="0" max="999" step="1"
+                placeholder="—"
+                value="${setData.reps}"
+                aria-label="Reps set ${s+1} of ${ex.name}"
+                onchange="App.updateSetField('${ex.id}', ${s}, 'reps', this.value)"
+                oninput="App.updateSetField('${ex.id}', ${s}, 'reps', this.value)"
+              />
+            </td>
+            <td class="py-2.5 px-3 text-right">
+              <button
+                class="check-btn ${setData.done ? 'checked' : ''}"
+                onclick="App.toggleSetDone('${ex.id}', ${s})"
+                aria-label="Mark set ${s+1} done"
+                aria-pressed="${setData.done}"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              </button>
+            </td>
+          </tr>`;
+      }
+
+      container.innerHTML += `
+        <div class="exercise-card bg-cyber-card border ${accentBorder} rounded-lg overflow-hidden animate-slide-up relative" style="animation-delay:${cardIndex * 0.05}s">
+
+          <!-- ── Exercise Header ── -->
+          <div class="border-b ${accentHeader} px-4 py-3 flex items-start gap-3">
+
+            <!-- ── IMAGE PLACEHOLDER ──────────────────────────────────────────
+                 Replace the div below with your <img> tag.
+                 Example:
+                   <img src="./images/${ex.id}.jpg" alt="${ex.name}"
+                        class="w-12 h-12 rounded object-cover border border-cyber-border flex-shrink-0" />
+                 ─────────────────────────────────────────────────────────────── -->
+            <div class="w-12 h-12 rounded border border-cyber-border/50 bg-cyber-surface flex-shrink-0 flex items-center justify-center overflow-hidden"
+                 title="IMAGE_PLACEHOLDER: Replace with <img src='./images/${ex.id}.jpg' ...>">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${accentColor}" stroke-width="1" opacity="0.4">
+                <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
+                <polyline points="21 15 16 10 5 21"/>
+              </svg>
+            </div>
+
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 flex-wrap">
+                <h3 class="font-body font-bold text-sm text-gray-200 leading-tight">${ex.name}</h3>
+                <span class="font-mono text-[10px] px-2 py-0.5 rounded border ${accentBadge}">${ex.muscle}</span>
+              </div>
+              <p class="font-mono text-[10px] text-gray-600 mt-0.5 leading-tight">${ex.arabic} · <span style="color:${accentColor};opacity:0.7">${ex.target}</span></p>
+            </div>
+
+            <!-- Volume mini display -->
+            <div class="flex-shrink-0 text-right">
+              <div id="vol-${ex.id}" class="font-mono text-xs" style="color:${accentColor};opacity:0.6">—</div>
+              <div class="font-mono text-[9px] text-gray-700 mt-0.5">VOL (kg)</div>
+            </div>
+          </div>
+
+          <!-- ── Sets Table ── -->
+          <div class="overflow-x-auto">
+            <table class="w-full exercise-table">
+              <thead>
+                <tr class="border-b border-cyber-border/50" style="background:${accentFaint}">
+                  <th class="py-2 px-3 text-left font-mono text-[10px] text-gray-600 tracking-widest w-10">SET</th>
+                  <th class="py-2 px-2 text-left font-mono text-[10px] text-gray-600 tracking-widest">WEIGHT (kg)</th>
+                  <th class="py-2 px-2 text-left font-mono text-[10px] text-gray-600 tracking-widest">REPS</th>
+                  <th class="py-2 px-3 text-right font-mono text-[10px] text-gray-600 tracking-widest">DONE</th>
+                </tr>
+              </thead>
+              <tbody>${setRowsHtml}</tbody>
+            </table>
+          </div>
+        </div>`;
+
+      cardIndex++;
+    });
+
+    // Update volume displays
+    workout.exercises.forEach(ex => this.updateExVol(ex.id));
+  },
+
+  // ── Set field update ──
+  updateSetField(exId, setIdx, field, value) {
+    State.updateSet(State.currentDay, exId, setIdx, field, value);
+    this.updateExVol(exId);
+  },
+
+  // ── Toggle set done ──
+  toggleSetDone(exId, setIdx) {
+    const current = State.getSetData(State.currentDay, exId, setIdx);
+    const newDone = !current.done;
+    State.updateSet(State.currentDay, exId, setIdx, 'done', newDone);
+    // Update UI
+    const row = document.getElementById(`set-row-${exId}-${setIdx}`);
+    if (row) {
+      row.classList.toggle('done', newDone);
+      const setNum = row.querySelector('.set-num');
+      if (setNum) {
+        setNum.classList.toggle('text-green-400', newDone);
+        setNum.classList.toggle('text-amber-500', !newDone);
+        setNum.classList.toggle('text-blue-500', !newDone);
+      }
+    }
+    const btn = row?.querySelector('.check-btn');
+    if (btn) {
+      btn.classList.toggle('checked', newDone);
+      btn.setAttribute('aria-pressed', newDone);
+    }
+    this.updateProgress(State.getType(State.currentDay));
+  },
+
+  // ── Volume display per exercise ──
+  updateExVol(exId) {
+    const el = document.getElementById(`vol-${exId}`);
+    if (!el) return;
+    const day = State.currentDay;
+    const exData = State.sessionData?.[day]?.[exId] || {};
+    let totalVol = 0;
+    Object.values(exData).forEach(s => {
+      const w = parseFloat(s.weight) || 0;
+      const r = parseInt(s.reps) || 0;
+      totalVol += w * r;
+    });
+    el.textContent = totalVol > 0 ? totalVol.toFixed(1) : '—';
+  },
+
+  // ── Progress bar ──
+  updateProgress(type) {
+    if (!type || type === 'rest') return;
+    const workout = EXERCISE_DB[type];
+    if (!workout) return;
+    let total = 0, done = 0;
+    workout.exercises.forEach(ex => {
+      for (let s = 0; s < ex.sets; s++) {
+        total++;
+        const d = State.getSetData(State.currentDay, ex.id, s);
+        if (d.done) done++;
+      }
+    });
+    const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+    const bar = document.getElementById('progress-bar');
+    const txt = document.getElementById('progress-text');
+    const isAmber = type === 'anterior';
+    bar.style.width = pct + '%';
+    bar.className = `h-full rounded-full progress-bar-fill ${isAmber ? 'bg-gradient-to-r from-amber-600 to-amber-400' : 'bg-gradient-to-r from-blue-600 to-blue-400'}`;
+    if (txt) txt.textContent = `${done}/${total} SETS · ${pct}%`;
+  },
+
+  // ── Finish & Save Workout ──
+  finishWorkout() {
+    const type = State.getType(State.currentDay);
+    if (!type || type === 'rest') return;
+    const workout = EXERCISE_DB[type];
+    if (!workout) return;
+
+    // Build log entry
+    const logExercises = workout.exercises.map(ex => {
+      const sets = [];
+      for (let s = 0; s < ex.sets; s++) {
+        const d = State.getSetData(State.currentDay, ex.id, s);
+        sets.push({ setNum: s+1, weight: parseFloat(d.weight)||0, reps: parseInt(d.reps)||0, done: d.done });
+      }
+      return { id: ex.id, name: ex.name, muscle: ex.muscle, sets };
+    });
+
+    const entry = {
+      id:         Date.now().toString(36),
+      timestamp:  new Date().toISOString(),
+      date:       new Date().toLocaleDateString('en-CA'), // YYYY-MM-DD
+      day:        State.currentDay,
+      type,
+      exercises:  logExercises,
+      totalVolume: logExercises.reduce((acc, ex) =>
+        acc + ex.sets.reduce((s, set) => s + set.weight * set.reps, 0), 0)
+    };
+
+    State.history.unshift(entry);
+    State.clearDay(State.currentDay);
+    State.save();
+
+    this.renderWorkoutView();
+    App.toast('✅ Workout saved to history!', 'success');
+  },
+
+  // ── Switch View ──
+  switchView(view) {
+    State.currentView = view;
+    document.querySelectorAll('.view-panel').forEach(p => p.classList.add('hidden'));
+    const panel = document.getElementById(`view-${view}`);
+    if (panel) panel.classList.remove('hidden');
+
+    // Nav button styles
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+      btn.className = btn.className
+        .replace(' bg-cyber-amber/20 text-amber-400','')
+        .replace(' text-gray-300','')
+        .replace(' text-gray-500','');
+    });
+    const activeNav = document.getElementById(`nav-${view}`);
+    const inactiveNavs = ['workout','history','analytics'].filter(v => v !== view);
+    if (activeNav) activeNav.className += ' bg-cyber-amber/20 text-amber-400';
+    inactiveNavs.forEach(v => {
+      const b = document.getElementById(`nav-${v}`);
+      if (b) b.className += ' text-gray-500';
+    });
+
+    if (view === 'history') this.renderHistory();
+    this.updateNavStyles();
+  },
+
+  updateNavStyles() {
+    // ensure correct active style is applied
+    ['workout','history','analytics'].forEach(v => {
+      const btn = document.getElementById(`nav-${v}`);
+      if (!btn) return;
+      btn.classList.remove('bg-cyber-amber/20','text-amber-400','text-gray-500','text-gray-300');
+      if (v === State.currentView) btn.classList.add('bg-cyber-amber/20','text-amber-400');
+      else btn.classList.add('text-gray-500');
+    });
+  },
+
+  // ── History View ──
+  renderHistory() {
+    const list = document.getElementById('history-list');
+    if (!list) return;
+    if (State.history.length === 0) {
+      list.innerHTML = `<div class="text-center py-16 text-gray-600">
+        <svg class="mx-auto mb-4 opacity-30" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <p class="font-mono text-sm tracking-widest">NO WORKOUT HISTORY YET</p>
+      </div>`;
+      return;
+    }
+    list.innerHTML = State.history.map(entry => {
+      const isAmber = entry.type === 'anterior';
+      const accentBorder = isAmber ? 'border-amber-500/20' : 'border-blue-500/20';
+      const accentText   = isAmber ? 'text-amber-400' : 'text-blue-400';
+      const typeLabel    = isAmber ? 'ANTERIOR' : 'POSTERIOR';
+      const date = new Date(entry.timestamp);
+      const dateStr = date.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' }).toUpperCase();
+      const timeStr = date.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' });
+      const vol = entry.totalVolume?.toFixed(0) || '0';
+      const doneSets = entry.exercises.reduce((a, ex) => a + ex.sets.filter(s => s.done).length, 0);
+      const totalSets = entry.exercises.reduce((a, ex) => a + ex.sets.length, 0);
+      return `
+        <div class="bg-cyber-card border ${accentBorder} rounded-lg p-4 clip-card-sm cursor-pointer hover:bg-cyber-surface transition-colors"
+             onclick="App.showHistoryDetail('${entry.id}')">
+          <div class="flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+              <div class="w-8 h-8 rounded ${isAmber ? 'bg-amber-500/10 border border-amber-500/20' : 'bg-blue-500/10 border border-blue-500/20'} flex items-center justify-center flex-shrink-0">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${isAmber ? '#f59e0b' : '#3b82f6'}" stroke-width="2"><path d="M6 4v16M18 4v16M1 12h4M19 12h4M6 8h12M6 16h12"/></svg>
+              </div>
+              <div class="min-w-0">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="font-mono text-xs font-bold ${accentText} tracking-widest">${typeLabel}</span>
+                  <span class="font-mono text-xs text-gray-600">${entry.day.toUpperCase()}</span>
+                </div>
+                <div class="font-mono text-[11px] text-gray-600 mt-0.5">${dateStr} · ${timeStr}</div>
+              </div>
+            </div>
+            <div class="flex items-center gap-4 flex-shrink-0">
+              <div class="text-right">
+                <div class="font-mono text-sm font-bold text-gray-300">${vol} <span class="text-[10px] text-gray-600">kg</span></div>
+                <div class="font-mono text-[9px] text-gray-600 mt-0.5">VOLUME</div>
+              </div>
+              <div class="text-right hidden sm:block">
+                <div class="font-mono text-sm font-bold text-gray-300">${doneSets}<span class="text-gray-600 text-xs">/${totalSets}</span></div>
+                <div class="font-mono text-[9px] text-gray-600 mt-0.5">SETS</div>
+              </div>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#374151" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+  },
+
+  showHistoryDetail(id) {
+    const entry = State.history.find(e => e.id === id);
+    if (!entry) return;
+    const isAmber = entry.type === 'anterior';
+    const accentText = isAmber ? 'text-amber-400' : 'text-blue-400';
+    const date = new Date(entry.timestamp);
+    const dateStr = date.toLocaleString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric', hour:'2-digit', minute:'2-digit' });
+
+    document.getElementById('modal-title').textContent = `${entry.type.toUpperCase()} · ${entry.day.toUpperCase()}`;
+
+    let bodyHtml = `<p class="font-mono text-xs text-gray-500 mb-4 tracking-wide">${dateStr.toUpperCase()}</p>`;
+    entry.exercises.forEach(ex => {
+      const vol = ex.sets.reduce((a, s) => a + s.weight * s.reps, 0);
+      bodyHtml += `
+        <div class="mb-4">
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="font-body font-semibold text-sm text-gray-300">${ex.name}</span>
+            <span class="font-mono text-xs text-gray-600">${vol.toFixed(0)} kg vol</span>
+          </div>
+          <div class="grid grid-cols-3 gap-1.5">
+            ${ex.sets.map(s => `
+              <div class="bg-cyber-surface border border-cyber-border/50 rounded p-2 text-center ${s.done ? 'border-green-500/20' : ''}">
+                <div class="font-mono text-xs text-gray-500 mb-1">SET ${s.setNum}</div>
+                <div class="font-mono text-sm font-bold ${s.weight > 0 ? 'text-gray-200' : 'text-gray-600'}">${s.weight || '—'} <span class="text-[10px] text-gray-600">kg</span></div>
+                <div class="font-mono text-xs ${s.reps > 0 ? 'text-gray-400' : 'text-gray-700'}">${s.reps || '—'} reps</div>
+                ${s.done ? '<div class="mt-1"><span class="font-mono text-[9px] text-green-500 tracking-wider">✓ DONE</span></div>' : ''}
+              </div>`).join('')}
+          </div>
+        </div>`;
+    });
+
+    document.getElementById('modal-body').innerHTML = bodyHtml;
+    const backdrop = document.getElementById('modal-backdrop');
+    backdrop.classList.remove('hidden');
+    backdrop.classList.add('flex');
+  },
+
+  closeModal(e) {
+    const backdrop = document.getElementById('modal-backdrop');
+    backdrop.classList.add('hidden');
+    backdrop.classList.remove('flex');
+  },
+
+  clearHistory() {
+    if (!confirm('Clear all workout history? This cannot be undone.')) return;
+    State.history = [];
+    State.save();
+    this.renderHistory();
+    App.toast('History cleared', 'neutral');
+  },
+
+  // ── Analytics ──
+  runAnalytics() {
+    const startVal = document.getElementById('analytics-start').value;
+    const endVal   = document.getElementById('analytics-end').value;
+    const output   = document.getElementById('analytics-output');
+
+    if (!startVal || !endVal) {
+      App.toast('Please select both dates', 'error');
+      return;
+    }
+    const startDate = new Date(startVal);
+    const endDate   = new Date(endVal);
+    endDate.setHours(23, 59, 59);
+
+    if (startDate > endDate) {
+      App.toast('Start must be before end date', 'error');
+      return;
+    }
+
+    const filtered = State.history.filter(e => {
+      const d = new Date(e.timestamp);
+      return d >= startDate && d <= endDate;
+    }).reverse(); // oldest first for progression
+
+    if (filtered.length === 0) {
+      output.innerHTML = `<div class="text-center py-12 text-gray-600">
+        <p class="font-mono text-sm tracking-widest">NO DATA IN SELECTED RANGE</p>
+      </div>`;
+      return;
+    }
+
+    // ── Volume over time ──
+    const volumeByDate = {};
+    filtered.forEach(e => {
+      const d = e.date;
+      if (!volumeByDate[d]) volumeByDate[d] = { anterior:0, posterior:0 };
+      volumeByDate[d][e.type] = (volumeByDate[d][e.type] || 0) + (e.totalVolume || 0);
+    });
+
+    // ── Per-exercise strength progression ──
+    const exProgress = {}; // { exId: { name, muscle, first: {w, date}, last: {w, date} } }
+    filtered.forEach(entry => {
+      entry.exercises.forEach(ex => {
+        const maxW = ex.sets.reduce((a, s) => Math.max(a, s.weight), 0);
+        if (maxW === 0) return;
+        if (!exProgress[ex.id]) {
+          exProgress[ex.id] = { name: ex.name, muscle: ex.muscle, first: null, last: null };
+        }
+        if (!exProgress[ex.id].first) exProgress[ex.id].first = { weight: maxW, date: entry.date };
+        exProgress[ex.id].last = { weight: maxW, date: entry.date };
+      });
+    });
+
+    // ── Stats summary ──
+    const totalWorkouts = filtered.length;
+    const totalVol = filtered.reduce((a, e) => a + (e.totalVolume || 0), 0);
+    const anteriorCount  = filtered.filter(e => e.type === 'anterior').length;
+    const posteriorCount = filtered.filter(e => e.type === 'posterior').length;
+
+    // ── Chart SVG (simple bar chart for volume) ──
+    const dates = Object.keys(volumeByDate).sort();
+    const maxVol = Math.max(...dates.map(d => volumeByDate[d].anterior + volumeByDate[d].posterior), 1);
+    const chartW = 700; const chartH = 120; const barW = Math.max(6, Math.floor((chartW - 40) / (dates.length + 1)));
+    let bars = '';
+    dates.forEach((d, i) => {
+      const totalV = (volumeByDate[d].anterior || 0) + (volumeByDate[d].posterior || 0);
+      const antV   = volumeByDate[d].anterior || 0;
+      const postV  = volumeByDate[d].posterior || 0;
+      const h      = Math.round((totalV / maxVol) * 100);
+      const hA     = Math.round((antV  / maxVol) * 100);
+      const hP     = Math.round((postV / maxVol) * 100);
+      const x      = 20 + i * (barW + 4);
+      const label  = d.slice(5); // MM-DD
+      bars += `<g>
+        ${antV > 0  ? `<rect x="${x}" y="${chartH - hA}"  width="${barW}" height="${hA}"  fill="#f59e0b" fill-opacity="0.7" rx="2"/>` : ''}
+        ${postV > 0 ? `<rect x="${x}" y="${chartH - hA - hP}" width="${barW}" height="${hP}" fill="#3b82f6" fill-opacity="0.7" rx="2"/>` : ''}
+        <text x="${x + barW/2}" y="${chartH + 14}" text-anchor="middle" font-size="8" fill="#6b7280" font-family="Share Tech Mono">${label}</text>
+      </g>`;
+    });
+
+    // ── Build comparison table ──
+    const rows = Object.values(exProgress).map(ex => {
+      const start   = ex.first?.weight || 0;
+      const current = ex.last?.weight  || 0;
+      const diff    = current - start;
+      const pct     = start > 0 ? ((diff / start) * 100).toFixed(1) : '—';
+      const sign    = diff > 0 ? '+' : '';
+      const cls     = diff > 0 ? 'positive' : diff < 0 ? 'negative' : 'neutral';
+      return `<tr class="border-b border-cyber-border/30 last:border-0 hover:bg-cyber-surface/50 transition-colors">
+        <td class="py-2.5 px-3 font-body text-sm text-gray-300">${ex.name}</td>
+        <td class="py-2.5 px-3 font-mono text-xs text-gray-500 hidden sm:table-cell">${ex.muscle}</td>
+        <td class="py-2.5 px-3 font-mono text-sm text-gray-400 text-right">${start} kg</td>
+        <td class="py-2.5 px-3 font-mono text-sm text-gray-200 text-right font-bold">${current} kg</td>
+        <td class="py-2.5 px-3 font-mono text-sm text-right font-bold ${cls}">${sign}${diff} kg</td>
+        <td class="py-2.5 px-3 font-mono text-sm text-right font-bold ${cls}">${pct !== '—' ? sign + pct + '%' : '—'}</td>
+      </tr>`;
+    }).join('');
+
+    output.innerHTML = `
+      <div class="space-y-5 animate-slide-up">
+
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          ${[
+            { label:'WORKOUTS', val: totalWorkouts, sub: 'in range' },
+            { label:'TOTAL VOLUME', val: (totalVol/1000).toFixed(1)+'t', sub: 'kg×reps' },
+            { label:'ANTERIOR', val: anteriorCount, sub: 'sessions' },
+            { label:'POSTERIOR', val: posteriorCount, sub: 'sessions' },
+          ].map(s => `
+            <div class="bg-cyber-card border border-cyber-border rounded-lg p-3 clip-card-sm">
+              <div class="font-mono text-[10px] text-gray-600 tracking-widest mb-1">${s.label}</div>
+              <div class="font-display text-xl font-black text-amber-400">${s.val}</div>
+              <div class="font-mono text-[10px] text-gray-600 mt-0.5">${s.sub}</div>
+            </div>`).join('')}
+        </div>
+
+        <!-- Volume Chart -->
+        <div class="bg-cyber-card border border-cyber-border rounded-lg p-4 clip-card-sm">
+          <div class="flex items-center justify-between mb-3">
+            <span class="font-mono text-xs text-cyber-muted tracking-widest">// VOLUME OVER TIME</span>
+            <div class="flex items-center gap-3 font-mono text-[10px]">
+              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-amber-500 inline-block"></span> ANT</span>
+              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-blue-500 inline-block"></span> POST</span>
+            </div>
+          </div>
+          ${dates.length > 0
+            ? `<div class="overflow-x-auto">
+                <svg viewBox="0 0 ${Math.max(chartW, dates.length * (barW+4) + 40)} ${chartH + 24}"
+                     class="w-full" style="min-width:200px; height:${chartH+28}px">
+                  <line x1="0" y1="${chartH}" x2="${chartW}" y2="${chartH}" stroke="#1f2937" stroke-width="1"/>
+                  ${bars}
+                </svg>
+               </div>`
+            : '<p class="font-mono text-xs text-gray-600">No data</p>'
+          }
+        </div>
+
+        <!-- Strength Progression Table -->
+        <div class="bg-cyber-card border border-cyber-border rounded-lg overflow-hidden clip-card-sm">
+          <div class="px-4 py-3 border-b border-cyber-border">
+            <span class="font-mono text-xs text-cyber-muted tracking-widest">// STRENGTH PROGRESSION</span>
+          </div>
+          ${rows
+            ? `<div class="overflow-x-auto">
+                <table class="w-full">
+                  <thead>
+                    <tr class="border-b border-cyber-border/50">
+                      <th class="py-2 px-3 text-left font-mono text-[10px] text-gray-600 tracking-widest">EXERCISE</th>
+                      <th class="py-2 px-3 text-left font-mono text-[10px] text-gray-600 tracking-widest hidden sm:table-cell">MUSCLE</th>
+                      <th class="py-2 px-3 text-right font-mono text-[10px] text-gray-600 tracking-widest">START</th>
+                      <th class="py-2 px-3 text-right font-mono text-[10px] text-gray-600 tracking-widest">CURRENT</th>
+                      <th class="py-2 px-3 text-right font-mono text-[10px] text-gray-600 tracking-widest">DIFF</th>
+                      <th class="py-2 px-3 text-right font-mono text-[10px] text-gray-600 tracking-widest">GROWTH</th>
+                    </tr>
+                  </thead>
+                  <tbody>${rows}</tbody>
+                </table>
+               </div>`
+            : '<p class="font-mono text-xs text-gray-600 px-4 py-6">No weight data recorded</p>'
+          }
+        </div>
+
+      </div>`;
+  },
+
+  // ── Toast ──
+  toast(msg, type = 'success') {
+    const toast = document.getElementById('toast');
+    const inner = document.getElementById('toast-inner');
+    const icon  = document.getElementById('toast-icon');
+    const msgEl = document.getElementById('toast-msg');
+
+    inner.className = inner.className
+      .replace(/border-\S+/g,'').replace(/text-\S+/g,'').trim();
+
+    if (type === 'success') {
+      inner.classList.add('border-green-500/40','text-green-400');
+      icon.textContent = '✓';
+    } else if (type === 'error') {
+      inner.classList.add('border-red-500/40','text-red-400');
+      icon.textContent = '✕';
+    } else {
+      inner.classList.add('border-gray-600','text-gray-400');
+      icon.textContent = '–';
+    }
+    // Re-apply base classes
+    inner.className = `flex items-center gap-3 px-5 py-3 bg-cyber-card border rounded-lg font-mono text-sm font-bold tracking-wide shadow-lg ` + inner.className.split(' ').slice(-2).join(' ');
+
+    msgEl.textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(App._toastTimer);
+    App._toastTimer = setTimeout(() => toast.classList.remove('show'), 3000);
+  }
+
+};
+
+// ── Bootstrap ──
+document.addEventListener('DOMContentLoaded', () => App.init());
+</script>
+
+</body>
+</html>
