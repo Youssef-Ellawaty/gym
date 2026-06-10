@@ -1,1508 +1,1809 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>AntPost // Anterior · Posterior Tracker</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#080c14" />
+  <title>DevGainz — AI Fitness Ecosystem</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
-
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
-      darkMode: 'class',
       theme: {
         extend: {
-          fontFamily: {
-            display: ['Orbitron', 'sans-serif'],
-            body:    ['Rajdhani', 'sans-serif'],
-            mono:    ['Share Tech Mono', 'monospace'],
-          },
           colors: {
-            cyber: {
-              amber:  '#f59e0b',
-              amberD: '#b45309',
-              amberG: '#fcd34d',
-              blue:   '#3b82f6',
-              blueD:  '#1d4ed8',
-              blueG:  '#93c5fd',
-              red:    '#ef4444',
-              green:  '#22c55e',
-              bg:     '#030712',
-              surface:'#0d1117',
-              card:   '#111827',
-              border: '#1f2937',
-              muted:  '#374151',
-            }
+            bg: '#080c14',
+            surface: '#0d1422',
+            card: '#111927',
+            border: '#1e2d42',
+            cyan: { DEFAULT: '#00e5ff', dim: '#00b8cc', glow: 'rgba(0,229,255,0.15)' },
+            violet: { DEFAULT: '#7c3aed', dim: '#5b21b6', glow: 'rgba(124,58,237,0.2)' },
+            green: { DEFAULT: '#00ff87', dim: '#00c968' },
+            orange: { DEFAULT: '#ff6b35', dim: '#cc4f1e' },
+            red: { DEFAULT: '#ff3b5c', dim: '#cc1e3a' },
+            gold: { DEFAULT: '#ffd700', dim: '#ccac00' },
+            text: { primary: '#e8f4f8', secondary: '#8fabbe', muted: '#4a6070' },
           },
-          boxShadow: {
-            amber:    '0 0 20px rgba(245,158,11,0.25), 0 0 60px rgba(245,158,11,0.10)',
-            amberSm:  '0 0 10px rgba(245,158,11,0.30)',
-            blue:     '0 0 20px rgba(59,130,246,0.25), 0 0 60px rgba(59,130,246,0.10)',
-            blueSm:   '0 0 10px rgba(59,130,246,0.30)',
-            green:    '0 0 12px rgba(34,197,94,0.35)',
-            red:      '0 0 12px rgba(239,68,68,0.35)',
+          fontFamily: {
+            display: ['Space Grotesk', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+            arabic: ['Cairo', 'sans-serif'],
           },
-          animation: {
-            'pulse-slow':   'pulse 3s cubic-bezier(0.4,0,0.6,1) infinite',
-            'scan':         'scan 4s linear infinite',
-            'glitch':       'glitch 6s step-end infinite',
-            'fade-in':      'fadeIn 0.4s ease forwards',
-            'slide-up':     'slideUp 0.35s ease forwards',
-          },
-          keyframes: {
-            scan: {
-              '0%':   { transform: 'translateY(-100%)' },
-              '100%': { transform: 'translateY(400%)' },
-            },
-            glitch: {
-              '0%, 95%, 100%': { transform: 'translate(0)' },
-              '96%':           { transform: 'translate(-2px, 1px)' },
-              '97%':           { transform: 'translate(2px, -1px)' },
-              '98%':           { transform: 'translate(-1px, 2px)' },
-            },
-            fadeIn:  { from: { opacity: '0' }, to: { opacity: '1' } },
-            slideUp: { from: { opacity: '0', transform: 'translateY(16px)' }, to: { opacity: '1', transform: 'translateY(0)' } },
-          }
-        }
-      }
-    }
+        },
+      },
+    };
   </script>
-
   <style>
-    * { box-sizing: border-box; }
-    html, body { background: #030712; color: #f3f4f6; font-family: 'Rajdhani', sans-serif; min-height: 100vh; }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: #080c14;
+      color: #e8f4f8;
+      font-family: 'Cairo', sans-serif;
+      min-height: 100vh;
+      overscroll-behavior-y: contain;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
 
-    /* Scrollbar styling */
-    ::-webkit-scrollbar { width: 4px; }
-    ::-webkit-scrollbar-track { background: #0d1117; }
-    ::-webkit-scrollbar-thumb { background: #374151; border-radius: 2px; }
-    ::-webkit-scrollbar-thumb:hover { background: #f59e0b; }
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: #080c14; }
+    ::-webkit-scrollbar-thumb { background: #1e2d42; border-radius: 2px; }
 
-    /* Grid noise overlay */
-    body::before {
+    /* Glow effects */
+    .glow-cyan { box-shadow: 0 0 20px rgba(0,229,255,0.2), 0 0 60px rgba(0,229,255,0.05); }
+    .glow-violet { box-shadow: 0 0 20px rgba(124,58,237,0.25), 0 0 60px rgba(124,58,237,0.08); }
+    .glow-green { box-shadow: 0 0 20px rgba(0,255,135,0.2); }
+    .text-glow-cyan { text-shadow: 0 0 20px rgba(0,229,255,0.6); }
+    .text-glow-green { text-shadow: 0 0 20px rgba(0,255,135,0.5); }
+
+    /* Grid scanlines texture */
+    .scanlines::before {
       content: '';
-      position: fixed; inset: 0; z-index: 0; pointer-events: none;
-      background-image:
-        linear-gradient(rgba(245,158,11,0.015) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(245,158,11,0.015) 1px, transparent 1px);
-      background-size: 48px 48px;
-    }
-
-    /* Scan line */
-    body::after {
-      content: '';
-      position: fixed; top: 0; left: 0; right: 0; height: 120px; z-index: 0; pointer-events: none;
-      background: linear-gradient(to bottom, transparent, rgba(245,158,11,0.03), transparent);
-      animation: scan 8s linear infinite;
-    }
-
-    #app { position: relative; z-index: 1; }
-
-    /* Clip-path accent corners */
-    .clip-card {
-      clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px));
-    }
-    .clip-card-sm {
-      clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
-    }
-
-    /* Neon border variants */
-    .border-amber-glow { border-color: #f59e0b; box-shadow: 0 0 0 1px rgba(245,158,11,0.15) inset, 0 0 20px rgba(245,158,11,0.15); }
-    .border-blue-glow  { border-color: #3b82f6; box-shadow: 0 0 0 1px rgba(59,130,246,0.15) inset, 0 0 20px rgba(59,130,246,0.15); }
-
-    /* Input styles */
-    input[type=number] {
-      -moz-appearance: textfield;
-      background: #0d1117; border: 1px solid #1f2937; color: #f3f4f6;
-      font-family: 'Share Tech Mono', monospace; font-size: 15px;
-      padding: 6px 8px; width: 100%; border-radius: 4px;
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-    input[type=number]::-webkit-inner-spin-button,
-    input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
-    input[type=number]:focus { outline: none; border-color: #f59e0b; box-shadow: 0 0 8px rgba(245,158,11,0.25); }
-    .posterior-mode input[type=number]:focus { border-color: #3b82f6; box-shadow: 0 0 8px rgba(59,130,246,0.25); }
-
-    input[type=date] {
-      background: #0d1117; border: 1px solid #1f2937; color: #f3f4f6;
-      font-family: 'Share Tech Mono', monospace; font-size: 14px;
-      padding: 6px 10px; border-radius: 4px;
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-    input[type=date]:focus { outline: none; border-color: #f59e0b; box-shadow: 0 0 8px rgba(245,158,11,0.25); }
-    input[type=date]::-webkit-calendar-picker-indicator { filter: invert(0.7) sepia(1) saturate(5) hue-rotate(5deg); cursor: pointer; }
-
-    select {
-      background: #0d1117; border: 1px solid #1f2937; color: #f3f4f6;
-      font-family: 'Rajdhani', sans-serif; font-size: 15px; font-weight: 600;
-      padding: 8px 12px; border-radius: 4px; cursor: pointer;
-      transition: border-color 0.2s;
-    }
-    select:focus { outline: none; border-color: #f59e0b; }
-    option { background: #111827; }
-
-    /* Day button active states */
-    .day-btn.active-anterior { background: rgba(245,158,11,0.15); border-color: #f59e0b; color: #fcd34d; box-shadow: 0 0 10px rgba(245,158,11,0.2); }
-    .day-btn.active-posterior { background: rgba(59,130,246,0.15); border-color: #3b82f6; color: #93c5fd; box-shadow: 0 0 10px rgba(59,130,246,0.2); }
-    .day-btn.active-rest { background: rgba(55,65,81,0.4); border-color: #4b5563; color: #9ca3af; }
-
-    /* Set row checked state */
-    .set-row.done { opacity: 0.55; }
-    .set-row.done td { text-decoration: line-through; }
-    .set-row.done .set-num { color: #22c55e; }
-
-    /* Progress bar */
-    .progress-bar-fill { transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
-
-    /* Tabs */
-    .tab-btn { border-bottom: 2px solid transparent; transition: all 0.2s; }
-    .tab-btn.active-tab { border-bottom-color: #f59e0b; color: #fcd34d; }
-
-    /* Toast */
-    #toast {
-      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
-      z-index: 9999; transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,229,255,0.012) 2px, rgba(0,229,255,0.012) 4px);
       pointer-events: none;
-    }
-    #toast.show { transform: translateX(-50%) translateY(0); }
-
-    /* Modal backdrop */
-    #modal-backdrop { backdrop-filter: blur(4px); }
-
-    /* Comparison table */
-    .positive { color: #22c55e; }
-    .negative { color: #ef4444; }
-    .neutral  { color: #9ca3af; }
-
-    /* Animations */
-    .animate-slide-up { animation: slideUp 0.35s ease forwards; }
-    .animate-fade-in  { animation: fadeIn 0.4s ease forwards; }
-
-    /* Checkbox custom */
-    .check-btn {
-      width: 32px; height: 32px; border: 1.5px solid #374151;
-      border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center;
-      transition: all 0.2s; flex-shrink: 0; touch-action: manipulation;
-    }
-    .check-btn:hover { border-color: #22c55e; background: rgba(34,197,94,0.08); }
-    .check-btn.checked { border-color: #22c55e; background: rgba(34,197,94,0.15); box-shadow: 0 0 8px rgba(34,197,94,0.3); }
-    .check-btn svg { display: none; }
-    .check-btn.checked svg { display: block; }
-
-    /* Mobile exercise card spacing */
-    @media (max-width: 640px) {
-      .exercise-table th, .exercise-table td { padding: 8px 6px; }
+      z-index: 0;
     }
 
-    /* ── Stronger Design Enhancements ── */
-
-    /* Deeper card hover glow */
-    .exercise-card { transition: box-shadow 0.25s ease, transform 0.2s ease; }
-    .exercise-card:hover { transform: translateY(-1px); }
-    .anterior-mode .exercise-card:hover { box-shadow: 0 4px 32px rgba(245,158,11,0.12), 0 1px 0 rgba(245,158,11,0.2) inset; }
-    .posterior-mode .exercise-card:hover { box-shadow: 0 4px 32px rgba(59,130,246,0.12), 0 1px 0 rgba(59,130,246,0.2) inset; }
-
-    /* Muscle group divider band */
-    .muscle-group-header {
-      display: flex; align-items: center; gap: 10px;
-      padding: 10px 0 6px;
+    /* Cards */
+    .card {
+      background: #111927;
+      border: 1px solid #1e2d42;
+      border-radius: 16px;
     }
-    .muscle-group-header .label {
-      font-family: 'Orbitron', sans-serif; font-size: 10px; font-weight: 700;
-      letter-spacing: 0.15em; padding: 3px 10px; border-radius: 3px;
+    .card-hover {
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .card-hover:hover {
+      border-color: rgba(0,229,255,0.3);
+      box-shadow: 0 0 20px rgba(0,229,255,0.08);
+    }
+
+    /* Buttons */
+    .btn-cyan {
+      background: linear-gradient(135deg, rgba(0,229,255,0.15), rgba(0,229,255,0.05));
+      border: 1px solid rgba(0,229,255,0.4);
+      color: #00e5ff;
+      border-radius: 10px;
+      padding: 10px 20px;
+      font-weight: 600;
+      transition: all 0.2s;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+    .btn-cyan:hover, .btn-cyan:active {
+      background: linear-gradient(135deg, rgba(0,229,255,0.25), rgba(0,229,255,0.1));
+      box-shadow: 0 0 16px rgba(0,229,255,0.3);
+    }
+    .btn-violet {
+      background: linear-gradient(135deg, rgba(124,58,237,0.25), rgba(124,58,237,0.1));
+      border: 1px solid rgba(124,58,237,0.5);
+      color: #a78bfa;
+      border-radius: 10px;
+      padding: 10px 20px;
+      font-weight: 600;
+      transition: all 0.2s;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+    .btn-violet:hover, .btn-violet:active {
+      background: linear-gradient(135deg, rgba(124,58,237,0.4), rgba(124,58,237,0.2));
+      box-shadow: 0 0 16px rgba(124,58,237,0.4);
+    }
+    .btn-green {
+      background: linear-gradient(135deg, rgba(0,255,135,0.15), rgba(0,255,135,0.05));
+      border: 1px solid rgba(0,255,135,0.4);
+      color: #00ff87;
+      border-radius: 10px;
+      padding: 10px 20px;
+      font-weight: 600;
+      transition: all 0.2s;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+    .btn-green:hover, .btn-green:active {
+      box-shadow: 0 0 16px rgba(0,255,135,0.3);
+    }
+    .btn-done {
+      background: linear-gradient(135deg, #00ff87, #00c968);
+      color: #080c14;
+      border: none;
+      border-radius: 10px;
+      padding: 10px 20px;
+      font-weight: 700;
+      cursor: pointer;
+      touch-action: manipulation;
+      transition: all 0.2s;
+      min-height: 44px;
+    }
+    .btn-done:hover, .btn-done:active {
+      transform: scale(0.98);
+      box-shadow: 0 0 20px rgba(0,255,135,0.4);
+    }
+    .btn-done.done {
+      background: linear-gradient(135deg, #1e2d42, #111927);
+      color: #00ff87;
+      border: 1px solid rgba(0,255,135,0.3);
+    }
+
+    /* Inputs */
+    .input-field {
+      background: rgba(13,20,34,0.8);
+      border: 1px solid #1e2d42;
+      border-radius: 10px;
+      color: #e8f4f8;
+      padding: 10px 14px;
+      width: 100%;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .input-field:focus {
+      border-color: rgba(0,229,255,0.5);
+      box-shadow: 0 0 0 3px rgba(0,229,255,0.08);
+    }
+    .input-field::placeholder { color: #4a6070; }
+
+    /* Progress ring */
+    .ring-track { fill: none; stroke: #1e2d42; }
+    .ring-fill { fill: none; stroke-linecap: round; transition: stroke-dashoffset 0.6s cubic-bezier(0.4,0,0.2,1); }
+
+    /* Tab nav */
+    .tab-btn {
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: #8fabbe;
       white-space: nowrap;
+      touch-action: manipulation;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
-    .muscle-group-header .line { flex: 1; height: 1px; }
-
-    /* Stronger grid */
-    body::before {
-      background-size: 40px 40px;
-      background-image:
-        linear-gradient(rgba(245,158,11,0.025) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(245,158,11,0.025) 1px, transparent 1px);
+    .tab-btn.active {
+      background: rgba(0,229,255,0.1);
+      border: 1px solid rgba(0,229,255,0.3);
+      color: #00e5ff;
     }
-
-    /* Header border stronger */
-    header { border-bottom: 1px solid rgba(245,158,11,0.15) !important; }
-
-    /* Corner accent dots on cards */
-    .exercise-card::before {
-      content: ''; position: absolute; top: 0; right: 0;
-      width: 0; height: 0;
-      pointer-events: none; z-index: 2;
+    .tab-btn:not(.active):hover {
+      background: rgba(255,255,255,0.04);
+      color: #e8f4f8;
     }
 
-    /* Input focus ring more dramatic */
-    input[type=number]:focus {
-      box-shadow: 0 0 0 1px rgba(245,158,11,0.4), 0 0 12px rgba(245,158,11,0.2) !important;
+    /* Modal overlay */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(8,12,20,0.85);
+      backdrop-filter: blur(8px);
+      z-index: 100;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 0;
     }
-    .posterior-mode input[type=number]:focus {
-      border-color: #3b82f6 !important;
-      box-shadow: 0 0 0 1px rgba(59,130,246,0.4), 0 0 12px rgba(59,130,246,0.2) !important;
+    .modal-overlay.hidden { display: none; }
+    .modal-sheet {
+      background: #0d1422;
+      border: 1px solid #1e2d42;
+      border-radius: 24px 24px 0 0;
+      width: 100%;
+      max-width: 600px;
+      max-height: 92vh;
+      overflow-y: auto;
+      padding: 24px 20px calc(24px + env(safe-area-inset-bottom));
+    }
+    .modal-handle {
+      width: 36px;
+      height: 4px;
+      background: #1e2d42;
+      border-radius: 2px;
+      margin: 0 auto 20px;
     }
 
-    /* Finish button stronger pulse on hover */
-    #finish-btn:hover { letter-spacing: 0.12em; }
+    /* Chat bubbles */
+    .chat-user {
+      background: rgba(124,58,237,0.15);
+      border: 1px solid rgba(124,58,237,0.25);
+      border-radius: 16px 4px 16px 16px;
+      padding: 10px 14px;
+      max-width: 80%;
+      margin-left: auto;
+      font-size: 14px;
+    }
+    .chat-ai {
+      background: rgba(0,229,255,0.07);
+      border: 1px solid rgba(0,229,255,0.15);
+      border-radius: 4px 16px 16px 16px;
+      padding: 10px 14px;
+      max-width: 85%;
+      font-size: 14px;
+    }
+    .chat-macro-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(0,229,255,0.1);
+      border: 1px solid rgba(0,229,255,0.2);
+      border-radius: 6px;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-family: 'JetBrains Mono', monospace;
+      color: #00e5ff;
+      margin: 2px;
+    }
 
-    /* Number inputs — monospaced centered */
-    input[type=number] { text-align: center; }
+    /* Badge */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 6px;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .badge-cyan { background: rgba(0,229,255,0.1); color: #00e5ff; border: 1px solid rgba(0,229,255,0.2); }
+    .badge-green { background: rgba(0,255,135,0.1); color: #00ff87; border: 1px solid rgba(0,255,135,0.2); }
+    .badge-orange { background: rgba(255,107,53,0.1); color: #ff6b35; border: 1px solid rgba(255,107,53,0.2); }
+    .badge-violet { background: rgba(124,58,237,0.1); color: #a78bfa; border: 1px solid rgba(124,58,237,0.2); }
 
-    /* Day selector stronger active */
-    .day-btn { transition: all 0.18s ease; }
-    .day-btn:hover { background: rgba(245,158,11,0.06); border-color: #4b5563; color: #d1d5db; }
+    /* Exercise card completed state */
+    .exercise-card.completed {
+      border-color: rgba(0,255,135,0.3);
+      background: linear-gradient(135deg, rgba(0,255,135,0.04), #111927);
+    }
 
-    /* Nav buttons font */
-    .nav-btn { font-family: 'Orbitron', sans-serif; font-size: 9px; font-weight: 700; letter-spacing: 0.1em; padding: 5px 8px; }
+    /* Accordion */
+    .accordion-content { display: none; }
+    .accordion-content.open { display: block; }
 
-    /* Stronger section markers */
-    .section-marker {
+    /* Bottom nav */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(13,20,34,0.95);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid #1e2d42;
+      padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
+      z-index: 50;
+      display: flex;
+      justify-content: space-around;
+    }
+    .nav-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      padding: 6px 16px;
+      border-radius: 10px;
+      cursor: pointer;
+      touch-action: manipulation;
+      transition: all 0.2s;
+      color: #4a6070;
+      min-width: 60px;
+      font-size: 11px;
+    }
+    .nav-btn.active { color: #00e5ff; }
+    .nav-btn svg { width: 22px; height: 22px; }
+
+    /* Section visibility */
+    .section { display: none; }
+    .section.active { display: block; }
+
+    /* Spinning loader */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spin { animation: spin 0.8s linear infinite; }
+
+    /* Pulse for active indicators */
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.85); }
+    }
+    .pulse-dot { animation: pulse-dot 1.5s ease-in-out infinite; }
+
+    /* Fade in animation */
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .fade-in { animation: fadeIn 0.3s ease-out; }
+
+    /* Exercise image placeholder */
+    .ex-img {
+      width: 100%;
+      height: 120px;
+      background: linear-gradient(135deg, #0d1422, #111927);
+      border: 1px solid #1e2d42;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
       position: relative;
-      padding-left: 12px;
     }
-    .section-marker::before {
-      content: ''; position: absolute; left: 0; top: 50%;
-      transform: translateY(-50%);
-      width: 3px; height: 12px; background: #f59e0b; border-radius: 2px;
-    }
+    .ex-img svg { width: 48px; height: 48px; opacity: 0.3; }
+    .ex-img img { width: 100%; height: 100%; object-fit: cover; border-radius: 11px; }
+
+    /* Typing dots */
+    @keyframes typing-dot { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+    .typing span:nth-child(1) { animation: typing-dot 1s ease-in-out 0s infinite; }
+    .typing span:nth-child(2) { animation: typing-dot 1s ease-in-out 0.2s infinite; }
+    .typing span:nth-child(3) { animation: typing-dot 1s ease-in-out 0.4s infinite; }
+
+    /* Water fill animation */
+    @keyframes waterFill { from { height: 0; } }
+    .water-level { transition: height 0.6s cubic-bezier(0.4,0,0.2,1); }
+
+    /* Stat number counter */
+    @keyframes countUp { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
+    .count-anim { animation: countUp 0.4s cubic-bezier(0.34,1.56,0.64,1); }
   </style>
 </head>
-<body>
+<body class="scanlines">
 
-<div id="app" class="min-h-screen pb-20">
+<!-- ============================================================
+     TOP HEADER
+============================================================ -->
+<header id="app-header" class="sticky top-0 z-40 px-4 py-3" style="background: rgba(8,12,20,0.95); backdrop-filter: blur(20px); border-bottom: 1px solid #1e2d42;">
+  <div class="flex items-center justify-between max-w-2xl mx-auto">
+    <div class="flex items-center gap-3">
+      <div style="width: 36px; height: 36px; background: linear-gradient(135deg,#7c3aed,#00e5ff); border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#080c14" stroke-width="2.5" stroke-linecap="round">
+          <path d="M6 4v16M18 4v16M6 12h12M4 6h4M16 6h4M4 18h4M16 18h4"/>
+        </svg>
+      </div>
+      <div>
+        <div class="text-glow-cyan" style="font-family: 'Space Grotesk'; font-weight: 700; font-size: 16px; color: #00e5ff; letter-spacing: 0.5px;">DevGainz</div>
+        <div style="font-size: 10px; color: #4a6070; font-family: 'JetBrains Mono';">AI FITNESS ECOSYSTEM</div>
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <!-- Today indicator -->
+      <div id="today-badge" class="badge badge-cyan" style="font-size: 10px;"></div>
+      <!-- Profile avatar -->
+      <button onclick="openProfileModal()" style="width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, rgba(124,58,237,0.3), rgba(0,229,255,0.2)); border: 1px solid rgba(0,229,255,0.3); display: flex; align-items: center; justify-content: center; cursor: pointer;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="2" stroke-linecap="round">
+          <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</header>
 
-  <!-- ═══════════════════ HEADER ═══════════════════ -->
-  <header class="sticky top-0 z-50 bg-cyber-bg/90 backdrop-blur-md border-b border-cyber-border">
-    <div class="max-w-5xl mx-auto px-4 py-3">
-      <div class="flex items-center justify-between gap-4">
+<!-- ============================================================
+     MAIN CONTENT AREA
+============================================================ -->
+<main class="max-w-2xl mx-auto px-4 pt-4 pb-28">
 
-        <!-- Logo -->
-        <div class="flex items-center gap-3 min-w-0">
-          <div class="relative flex-shrink-0">
-            <div class="w-9 h-9 bg-cyber-amber/10 border border-cyber-amber/40 clip-card-sm flex items-center justify-center">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M6 4v16M18 4v16M1 12h4M19 12h4M6 8h12M6 16h12"/>
-              </svg>
+  <!-- ── WORKOUT SECTION ── -->
+  <section id="section-workout" class="section active fade-in">
+
+    <!-- Day selector -->
+    <div class="flex gap-2 mb-5">
+      <button id="tab-ant" class="tab-btn active flex-1" onclick="switchDay('anterior')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="3"/><path d="M12 8v8M8 20h8"/><path d="M9 11l-2 3M15 11l2 3"/></svg>
+        الأمامي
+      </button>
+      <button id="tab-post" class="tab-btn flex-1" onclick="switchDay('posterior')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+        الخلفي
+      </button>
+    </div>
+
+    <!-- Day title -->
+    <div class="card mb-4 p-4" style="background: linear-gradient(135deg, rgba(0,229,255,0.06), rgba(124,58,237,0.04));">
+      <div class="flex items-center justify-between">
+        <div>
+          <div id="day-title" class="text-glow-cyan" style="font-family: 'Space Grotesk'; font-size: 20px; font-weight: 700; color: #00e5ff;"></div>
+          <div id="day-subtitle" style="font-size: 12px; color: #8fabbe; margin-top: 2px;"></div>
+        </div>
+        <div id="day-progress-ring" class="relative" style="width: 56px; height: 56px;">
+          <svg width="56" height="56" viewBox="0 0 56 56">
+            <circle class="ring-track" cx="28" cy="28" r="22" stroke-width="4"/>
+            <circle id="workout-ring-fill" class="ring-fill" cx="28" cy="28" r="22" stroke-width="4" stroke="#00e5ff"
+              stroke-dasharray="138.2" stroke-dashoffset="138.2" transform="rotate(-90 28 28)"/>
+          </svg>
+          <div id="workout-ring-text" style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono'; font-size: 12px; font-weight: 700; color: #00e5ff;">0%</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Exercise cards container -->
+    <div id="exercises-container" class="space-y-4"></div>
+
+    <!-- Reset workout -->
+    <div class="mt-6 text-center">
+      <button onclick="resetWorkout()" style="background: none; border: 1px solid #1e2d42; color: #4a6070; border-radius: 8px; padding: 8px 20px; font-size: 12px; cursor: pointer; touch-action: manipulation;">
+        إعادة تعيين اليوم
+      </button>
+    </div>
+
+  </section>
+
+  <!-- ── NUTRITION AI SECTION ── -->
+  <section id="section-nutrition" class="section fade-in">
+
+    <!-- API Key config -->
+    <div id="api-key-banner" class="card mb-4 p-4" style="border-color: rgba(255,107,53,0.3); background: rgba(255,107,53,0.04);">
+      <div class="flex items-center gap-2 mb-3">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ff6b35" stroke-width="2"><path d="M15 7a4 4 0 0 1-4 4H7M3 21l6-6M14.5 9.5L21 3M21 3h-5M21 3v5"/></svg>
+        <span style="color: #ff6b35; font-weight: 600; font-size: 13px;">Gemini API Key مطلوب</span>
+      </div>
+      <div class="flex gap-2">
+        <input type="password" id="gemini-key-input" class="input-field" placeholder="AIza..." style="flex: 1;" />
+        <button onclick="saveGeminiKey()" class="btn-cyan" style="white-space: nowrap; padding: 10px 16px; font-size: 13px;">حفظ</button>
+      </div>
+      <div style="font-size: 11px; color: #4a6070; margin-top: 6px;">المفتاح يُحفظ محلياً فقط ولا يُرسل لأي مكان سوى Gemini API</div>
+    </div>
+
+    <!-- Macro progress rings -->
+    <div class="card mb-4 p-4">
+      <div class="flex items-center justify-between mb-4">
+        <div style="font-weight: 700; font-size: 15px; color: #e8f4f8;">الماكرو اليومي</div>
+        <button onclick="resetDailyNutrition()" style="font-size: 11px; color: #4a6070; background: none; border: 1px solid #1e2d42; padding: 4px 10px; border-radius: 6px; cursor: pointer;">إعادة تعيين</button>
+      </div>
+      <div class="grid grid-cols-4 gap-3 mb-4">
+        <!-- Calories -->
+        <div class="text-center">
+          <svg width="60" height="60" viewBox="0 0 60 60" class="mx-auto">
+            <circle class="ring-track" cx="30" cy="30" r="24" stroke-width="5"/>
+            <circle id="ring-cal" class="ring-fill" cx="30" cy="30" r="24" stroke="#ff6b35" stroke-width="5"
+              stroke-dasharray="150.8" stroke-dashoffset="150.8" transform="rotate(-90 30 30)"/>
+          </svg>
+          <div id="val-cal" style="font-family: 'JetBrains Mono'; font-size: 13px; font-weight: 700; color: #ff6b35; margin-top: -4px;">0</div>
+          <div style="font-size: 10px; color: #4a6070;">سعرات</div>
+          <div style="font-size: 9px; color: #4a6070;">/ <span id="goal-cal">2800</span></div>
+        </div>
+        <!-- Protein -->
+        <div class="text-center">
+          <svg width="60" height="60" viewBox="0 0 60 60" class="mx-auto">
+            <circle class="ring-track" cx="30" cy="30" r="24" stroke-width="5"/>
+            <circle id="ring-pro" class="ring-fill" cx="30" cy="30" r="24" stroke="#00e5ff" stroke-width="5"
+              stroke-dasharray="150.8" stroke-dashoffset="150.8" transform="rotate(-90 30 30)"/>
+          </svg>
+          <div id="val-pro" style="font-family: 'JetBrains Mono'; font-size: 13px; font-weight: 700; color: #00e5ff; margin-top: -4px;">0g</div>
+          <div style="font-size: 10px; color: #4a6070;">بروتين</div>
+          <div style="font-size: 9px; color: #4a6070;">/ <span id="goal-pro">158</span>g</div>
+        </div>
+        <!-- Carbs -->
+        <div class="text-center">
+          <svg width="60" height="60" viewBox="0 0 60 60" class="mx-auto">
+            <circle class="ring-track" cx="30" cy="30" r="24" stroke-width="5"/>
+            <circle id="ring-carb" class="ring-fill" cx="30" cy="30" r="24" stroke="#00ff87" stroke-width="5"
+              stroke-dasharray="150.8" stroke-dashoffset="150.8" transform="rotate(-90 30 30)"/>
+          </svg>
+          <div id="val-carb" style="font-family: 'JetBrains Mono'; font-size: 13px; font-weight: 700; color: #00ff87; margin-top: -4px;">0g</div>
+          <div style="font-size: 10px; color: #4a6070;">كارب</div>
+          <div style="font-size: 9px; color: #4a6070;">/ <span id="goal-carb">350</span>g</div>
+        </div>
+        <!-- Fats -->
+        <div class="text-center">
+          <svg width="60" height="60" viewBox="0 0 60 60" class="mx-auto">
+            <circle class="ring-track" cx="30" cy="30" r="24" stroke-width="5"/>
+            <circle id="ring-fat" class="ring-fill" cx="30" cy="30" r="24" stroke="#ffd700" stroke-width="5"
+              stroke-dasharray="150.8" stroke-dashoffset="150.8" transform="rotate(-90 30 30)"/>
+          </svg>
+          <div id="val-fat" style="font-family: 'JetBrains Mono'; font-size: 13px; font-weight: 700; color: #ffd700; margin-top: -4px;">0g</div>
+          <div style="font-size: 10px; color: #4a6070;">دهون</div>
+          <div style="font-size: 9px; color: #4a6070;">/ <span id="goal-fat">78</span>g</div>
+        </div>
+      </div>
+
+      <!-- Water tracker -->
+      <div class="flex items-center gap-3">
+        <div class="relative" style="width: 40px; height: 60px; border: 2px solid rgba(0,229,255,0.3); border-radius: 6px; overflow: hidden; flex-shrink: 0; background: rgba(13,20,34,0.8);">
+          <div id="water-bar" class="water-level absolute bottom-0 left-0 right-0" style="background: linear-gradient(180deg, rgba(0,229,255,0.7), rgba(0,180,220,0.9)); height: 0%;"></div>
+        </div>
+        <div class="flex-1">
+          <div class="flex items-center justify-between mb-1">
+            <div style="font-size: 12px; font-weight: 600; color: #00e5ff;">الماء اليومي</div>
+            <div style="font-family: 'JetBrains Mono'; font-size: 12px; color: #00e5ff;"><span id="val-water">0</span> / <span id="goal-water">3.0</span> L</div>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="addWater(250)" class="btn-cyan" style="padding: 6px 10px; font-size: 11px; flex: 1;">+250ml</button>
+            <button onclick="addWater(500)" class="btn-cyan" style="padding: 6px 10px; font-size: 11px; flex: 1;">+500ml</button>
+            <button onclick="addWater(1000)" class="btn-cyan" style="padding: 6px 10px; font-size: 11px; flex: 1;">+1L</button>
+            <button onclick="resetWater()" style="background: none; border: 1px solid #1e2d42; color: #4a6070; border-radius: 8px; padding: 6px 10px; font-size: 11px; cursor: pointer; flex: 1;">↺</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI Chat -->
+    <div class="card" style="border-color: rgba(0,229,255,0.15);">
+      <div class="flex items-center gap-2 p-4 border-b" style="border-color: #1e2d42;">
+        <div style="width: 32px; height: 32px; background: linear-gradient(135deg, rgba(0,229,255,0.2), rgba(124,58,237,0.2)); border-radius: 50%; border: 1px solid rgba(0,229,255,0.3); display: flex; align-items: center; justify-content: center;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="2" stroke-linecap="round">
+            <path d="M12 2a9 9 0 1 0 9 9H12V2z"/><path d="M12 2a9 9 0 0 1 9 9"/>
+          </svg>
+        </div>
+        <div>
+          <div style="font-weight: 700; font-size: 13px; color: #e8f4f8;">مساعد التغذية AI</div>
+          <div class="flex items-center gap-1">
+            <div class="pulse-dot" style="width: 6px; height: 6px; background: #00ff87; border-radius: 50%;"></div>
+            <div style="font-size: 10px; color: #00ff87;">Gemini Pro • نشط</div>
+          </div>
+        </div>
+        <button onclick="clearChat()" style="margin-right: auto; background: none; border: none; color: #4a6070; cursor: pointer; font-size: 11px;">مسح</button>
+      </div>
+
+      <!-- Messages -->
+      <div id="chat-messages" style="height: 320px; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px;">
+        <!-- Welcome message -->
+        <div class="chat-ai">
+          <div style="font-size: 12px; color: #4a6070; margin-bottom: 4px; font-family: 'JetBrains Mono';">DevGainz AI</div>
+          مرحباً 💪 أنا مساعد التغذية الذكي. أخبرني بما أكلته أو اسألني عن أفضل مصادر البروتين لبناء العضلات!
+        </div>
+      </div>
+
+      <!-- Input area -->
+      <div class="p-3" style="border-top: 1px solid #1e2d42;">
+        <div class="flex gap-2">
+          <input id="chat-input" class="input-field" placeholder="سجّل وجبتك أو اسأل سؤال..." style="flex: 1; font-family: 'Cairo'; font-size: 14px;" onkeydown="if(event.key==='Enter')sendChatMessage()" />
+          <button onclick="sendChatMessage()" id="chat-send-btn" class="btn-violet" style="padding: 10px 14px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Nutrition Guide Accordion -->
+    <div class="mt-4 card">
+      <button onclick="toggleAccordion('nutrition-guide')" class="w-full p-4 text-right flex items-center justify-between" style="background: none; border: none; cursor: pointer; touch-action: manipulation;">
+        <div class="flex items-center gap-2">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00ff87" stroke-width="2" stroke-linecap="round"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM12 17v-5M12 7h.01"/></svg>
+          <span style="font-weight: 700; color: #e8f4f8; font-size: 14px;">دليل التغذية للرياضيين</span>
+        </div>
+        <svg id="icon-nutrition-guide" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8fabbe" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <div id="nutrition-guide" class="accordion-content px-4 pb-4">
+        <div class="space-y-3">
+          <!-- Proteins -->
+          <div class="p-3 rounded-xl" style="background: rgba(0,229,255,0.04); border: 1px solid rgba(0,229,255,0.12);">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="badge badge-cyan">بروتين</span>
+              <span style="font-size: 13px; font-weight: 600; color: #00e5ff;">مصادر البروتين النظيفة</span>
             </div>
-            <span class="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-cyber-amber animate-pulse-slow"></span>
+            <div class="space-y-1" style="font-size: 13px; color: #8fabbe; line-height: 1.7;">
+              <div>🍗 <strong style="color: #e8f4f8;">صدر دجاج مسلوق</strong> — 31g بروتين / 100g، قليل الدهون</div>
+              <div>🥚 <strong style="color: #e8f4f8;">بيض كامل + بياض</strong> — 6g بروتين / بيضة، أمينو أسيد كامل</div>
+              <div>🧀 <strong style="color: #e8f4f8;">جبنة قريش</strong> — 14g بروتين / 100g، كازيين بطيء الهضم</div>
+              <div>🐟 <strong style="color: #e8f4f8;">تونة / سمك</strong> — 25g بروتين / 100g، أوميجا 3</div>
+            </div>
+          </div>
+          <!-- Carbs -->
+          <div class="p-3 rounded-xl" style="background: rgba(0,255,135,0.04); border: 1px solid rgba(0,255,135,0.12);">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="badge badge-green">كارب</span>
+              <span style="font-size: 13px; font-weight: 600; color: #00ff87;">الكربوهيدرات النظيفة</span>
+            </div>
+            <div class="space-y-1" style="font-size: 13px; color: #8fabbe; line-height: 1.7;">
+              <div>🌾 <strong style="color: #e8f4f8;">شوفان</strong> — كارب بطيء، ألياف، مثالي للإفطار</div>
+              <div>🍠 <strong style="color: #e8f4f8;">بطاطا حلوة</strong> — فيتامين A، نسبة جلايسيمي منخفضة</div>
+              <div>🍚 <strong style="color: #e8f4f8;">أرز أبيض / بني</strong> — قبل التمرين لطاقة سريعة</div>
+            </div>
+          </div>
+          <!-- Fats -->
+          <div class="p-3 rounded-xl" style="background: rgba(255,215,0,0.04); border: 1px solid rgba(255,215,0,0.12);">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="badge" style="background: rgba(255,215,0,0.1); color: #ffd700; border: 1px solid rgba(255,215,0,0.2);">دهون</span>
+              <span style="font-size: 13px; font-weight: 600; color: #ffd700;">الدهون الصحية</span>
+            </div>
+            <div class="space-y-1" style="font-size: 13px; color: #8fabbe; line-height: 1.7;">
+              <div>🫒 <strong style="color: #e8f4f8;">زيت زيتون</strong> — أوميجا 9، مضاد للالتهابات</div>
+              <div>🥜 <strong style="color: #e8f4f8;">مكسرات</strong> — لوز / جوز، دهون غير مشبعة</div>
+              <div>🥚 <strong style="color: #e8f4f8;">صفار البيض</strong> — فيتامين D، كوليسترول صحي</div>
+            </div>
+          </div>
+          <!-- Timing tip -->
+          <div class="p-3 rounded-xl" style="background: rgba(124,58,237,0.04); border: 1px solid rgba(124,58,237,0.12);">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="badge badge-violet">توقيت</span>
+              <span style="font-size: 13px; font-weight: 600; color: #a78bfa;">توقيت الوجبات</span>
+            </div>
+            <div class="space-y-1" style="font-size: 13px; color: #8fabbe; line-height: 1.7;">
+              <div>⏰ <strong style="color: #e8f4f8;">قبل التمرين (90 دقيقة)</strong> — كارب معقد + بروتين</div>
+              <div>⚡ <strong style="color: #e8f4f8;">بعد التمرين (30 دقيقة)</strong> — بروتين سريع + كارب بسيط</div>
+              <div>🌙 <strong style="color: #e8f4f8;">قبل النوم</strong> — جبنة قريش (كازيين بطيء)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ── ANALYTICS SECTION ── -->
+  <section id="section-analytics" class="section fade-in">
+
+    <!-- Overview cards -->
+    <div class="grid grid-cols-2 gap-3 mb-4">
+      <div class="card p-4 text-center">
+        <div style="font-size: 11px; color: #4a6070; margin-bottom: 4px; font-family: 'JetBrains Mono';">الوزن الحالي</div>
+        <div id="analytics-weight" style="font-family: 'Space Grotesk'; font-size: 26px; font-weight: 700; color: #00e5ff;" class="text-glow-cyan">—</div>
+        <div style="font-size: 10px; color: #4a6070;">كيلو</div>
+      </div>
+      <div class="card p-4 text-center">
+        <div style="font-size: 11px; color: #4a6070; margin-bottom: 4px; font-family: 'JetBrains Mono';">الحجم الكلي</div>
+        <div id="analytics-volume" style="font-family: 'Space Grotesk'; font-size: 22px; font-weight: 700; color: #00ff87;" class="text-glow-green">—</div>
+        <div style="font-size: 10px; color: #4a6070;">Volume (kg)</div>
+      </div>
+    </div>
+
+    <!-- Date range comparison -->
+    <div class="card mb-4 p-4">
+      <div style="font-weight: 700; font-size: 14px; color: #e8f4f8; margin-bottom: 12px; display: flex; align-items: center; gap-2;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="2" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        مقارنة الأداء بمرور الوقت
+      </div>
+      <div class="grid grid-cols-2 gap-3 mb-3">
+        <div>
+          <label style="font-size: 11px; color: #4a6070; display: block; margin-bottom: 4px;">من تاريخ</label>
+          <input type="date" id="date-from" class="input-field" />
+        </div>
+        <div>
+          <label style="font-size: 11px; color: #4a6070; display: block; margin-bottom: 4px;">إلى تاريخ</label>
+          <input type="date" id="date-to" class="input-field" />
+        </div>
+      </div>
+      <button onclick="runAnalytics()" class="btn-cyan w-full">تحليل الفترة</button>
+      <div id="analytics-results" class="mt-4 space-y-3 hidden">
+        <div class="grid grid-cols-3 gap-2">
+          <div class="p-3 rounded-xl text-center" style="background: rgba(0,229,255,0.05); border: 1px solid rgba(0,229,255,0.12);">
+            <div style="font-size: 10px; color: #4a6070; margin-bottom: 2px;">تغير الوزن</div>
+            <div id="res-weight-change" style="font-family: 'JetBrains Mono'; font-size: 14px; font-weight: 700; color: #00e5ff;"></div>
+          </div>
+          <div class="p-3 rounded-xl text-center" style="background: rgba(0,255,135,0.05); border: 1px solid rgba(0,255,135,0.12);">
+            <div style="font-size: 10px; color: #4a6070; margin-bottom: 2px;">نمو القوة</div>
+            <div id="res-strength" style="font-family: 'JetBrains Mono'; font-size: 14px; font-weight: 700; color: #00ff87;"></div>
+          </div>
+          <div class="p-3 rounded-xl text-center" style="background: rgba(255,215,0,0.05); border: 1px solid rgba(255,215,0,0.12);">
+            <div style="font-size: 10px; color: #4a6070; margin-bottom: 2px;">الحجم الإجمالي</div>
+            <div id="res-volume" style="font-family: 'JetBrains Mono'; font-size: 14px; font-weight: 700; color: #ffd700;"></div>
+          </div>
+        </div>
+        <div id="analytics-detail" class="space-y-2"></div>
+      </div>
+    </div>
+
+    <!-- Workout log history -->
+    <div class="card p-4">
+      <div style="font-weight: 700; font-size: 14px; color: #e8f4f8; margin-bottom: 12px; display: flex; align-items: center; gap-2;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        سجل التمارين
+      </div>
+      <div id="workout-history" class="space-y-2" style="max-height: 400px; overflow-y: auto;">
+        <div style="text-align: center; color: #4a6070; font-size: 13px; padding: 20px;">لا يوجد سجل بعد. أكمل أول تمرين!</div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ── PROFILE SECTION (inline, also in modal) ── -->
+  <section id="section-profile" class="section fade-in">
+    <div class="card p-5 mb-4" style="background: linear-gradient(135deg, rgba(124,58,237,0.08), rgba(0,229,255,0.04));">
+      <div class="flex items-center gap-3 mb-5">
+        <div style="width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #7c3aed, #00e5ff); display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 700; color: #080c14; font-family: 'Space Grotesk';" id="profile-avatar-text">D</div>
+        <div>
+          <div id="profile-display-name" style="font-family: 'Space Grotesk'; font-size: 18px; font-weight: 700; color: #e8f4f8;">الملف الشخصي</div>
+          <div style="font-size: 12px; color: #8fabbe;">بيانات الجسم والأهداف</div>
+        </div>
+      </div>
+      <div class="space-y-3">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label style="font-size: 11px; color: #4a6070; display: block; margin-bottom: 4px;">الاسم</label>
+            <input type="text" id="p-name" class="input-field" placeholder="اسمك" />
           </div>
           <div>
-            <h1 class="font-display text-sm sm:text-base font-black tracking-widest text-cyber-amber leading-none animate-glitch">AntPost</h1>
-            <p class="font-mono text-[9px] text-cyber-muted tracking-widest leading-none mt-0.5">ANT · POST TRACKER</p>
+            <label style="font-size: 11px; color: #4a6070; display: block; margin-bottom: 4px;">العمر</label>
+            <input type="number" id="p-age" class="input-field" placeholder="16" value="16" />
           </div>
         </div>
-
-        <!-- Date, Greeting & Nav -->
-        <div class="flex items-center gap-3 flex-shrink-0">
-          <div class="hidden sm:flex flex-col items-end">
-            <span id="header-date" class="font-mono text-[10px] text-gray-500 tracking-wide"></span>
-            <span class="font-mono text-[11px] text-amber-400/80 tracking-widest font-bold">Hi, Lawaty 👊</span>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label style="font-size: 11px; color: #4a6070; display: block; margin-bottom: 4px;">الوزن (كيلو)</label>
+            <input type="number" id="p-weight" class="input-field" placeholder="79" value="79" step="0.1" />
           </div>
-          <!-- Tab Navigation -->
-          <div class="flex items-center gap-1 bg-cyber-surface border border-cyber-border rounded p-1">
-            <button onclick="App.switchView('workout')" id="nav-workout"
-              class="nav-btn px-2.5 py-1 text-xs font-body font-700 rounded transition-all tracking-wide">
-              WORKOUT
-            </button>
-            <button onclick="App.switchView('history')" id="nav-history"
-              class="nav-btn px-2.5 py-1 text-xs font-body font-700 rounded transition-all tracking-wide">
-              HISTORY
-            </button>
-            <button onclick="App.switchView('analytics')" id="nav-analytics"
-              class="nav-btn px-2.5 py-1 text-xs font-body font-700 rounded transition-all tracking-wide">
-              ANALYTICS
-            </button>
+          <div>
+            <label style="font-size: 11px; color: #4a6070; display: block; margin-bottom: 4px;">الطول (سم)</label>
+            <input type="number" id="p-height" class="input-field" placeholder="175" />
           </div>
         </div>
-
-      </div>
-    </div>
-  </header>
-
-  <!-- ═══════════════════ MAIN ═══════════════════ -->
-  <main class="max-w-5xl mx-auto px-4 pt-5">
-
-    <!-- Mobile greeting (visible only on small screens) -->
-    <div class="sm:hidden mb-4 flex items-center justify-between px-3 py-2 bg-amber-500/5 border border-amber-500/15 rounded-lg">
-      <span class="font-mono text-xs text-amber-400/80 font-bold tracking-widest">Hi, Lawaty 👊</span>
-      <span id="header-date-mobile" class="font-mono text-[10px] text-gray-600 tracking-wide"></span>
-    </div>
-
-    <!-- ─── WORKOUT VIEW ─── -->
-    <div id="view-workout" class="view-panel animate-fade-in">
-
-      <!-- Day Selector -->
-      <section class="mb-6">
-        <div class="flex items-center gap-2 mb-3">
-          <span class="font-mono text-xs text-cyber-muted tracking-widest">// SELECT DAY</span>
-          <div class="flex-1 h-px bg-cyber-border"></div>
+        <div>
+          <label style="font-size: 11px; color: #4a6070; display: block; margin-bottom: 4px;">الهدف</label>
+          <select id="p-goal" class="input-field">
+            <option value="bulk">بناء كتلة عضلية (Bulk)</option>
+            <option value="cut">حرق دهون (Cut)</option>
+            <option value="maintain">المحافظة على الوزن</option>
+          </select>
         </div>
-        <div id="day-selector" class="grid grid-cols-7 gap-1.5">
-          <!-- Injected by JS -->
-        </div>
-      </section>
-
-      <!-- Workout Type Selector -->
-      <section id="workout-type-section" class="mb-6">
-        <div class="flex items-center gap-2 mb-3">
-          <span class="font-mono text-xs text-cyber-muted tracking-widest">// WORKOUT TYPE</span>
-          <div class="flex-1 h-px bg-cyber-border"></div>
-        </div>
-        <div class="flex flex-wrap gap-2">
-          <button id="btn-anterior" onclick="App.setWorkoutType('anterior')"
-            class="type-btn flex items-center gap-2 px-4 py-2.5 border border-cyber-border rounded font-body font-semibold text-sm tracking-wider transition-all duration-200">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-            ANTERIOR / الأمامي
-          </button>
-          <button id="btn-posterior" onclick="App.setWorkoutType('posterior')"
-            class="type-btn flex items-center gap-2 px-4 py-2.5 border border-cyber-border rounded font-body font-semibold text-sm tracking-wider transition-all duration-200">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-            POSTERIOR / الخلفي
-          </button>
-          <button id="btn-rest" onclick="App.setWorkoutType('rest')"
-            class="type-btn flex items-center gap-2 px-4 py-2.5 border border-cyber-border rounded font-body font-semibold text-sm tracking-wider transition-all duration-200">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8zM6 1v3M10 1v3M14 1v3"/></svg>
-            REST DAY
-          </button>
-        </div>
-      </section>
-
-      <!-- Progress Bar -->
-      <section id="progress-section" class="mb-6 hidden">
-        <div class="flex items-center justify-between mb-2">
-          <span class="font-mono text-xs text-cyber-muted tracking-widest">// SESSION PROGRESS</span>
-          <span id="progress-text" class="font-mono text-xs text-gray-300"></span>
-        </div>
-        <div class="h-1.5 bg-cyber-surface rounded-full overflow-hidden border border-cyber-border">
-          <div id="progress-bar" class="h-full rounded-full progress-bar-fill" style="width:0%"></div>
-        </div>
-      </section>
-
-      <!-- Rest Day Card -->
-      <div id="rest-day-card" class="hidden animate-slide-up">
-        <div class="bg-cyber-card border border-cyber-muted/30 rounded-lg p-8 text-center clip-card relative overflow-hidden">
-          <div class="absolute inset-0 bg-gradient-to-br from-cyber-muted/5 to-transparent pointer-events-none"></div>
-          <div class="relative">
-            <div class="w-16 h-16 mx-auto mb-4 bg-cyber-muted/10 rounded-full flex items-center justify-center">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="1.5">
-                <path d="M12 2a5 5 0 1 0 5 5 5 5 0 0 0-5-5zm0 8a3 3 0 1 1 3-3 3 3 0 0 1-3 3zm9 11v-1a7 7 0 0 0-7-7h-4a7 7 0 0 0-7 7v1"/>
-              </svg>
-            </div>
-            <h2 class="font-display text-xl font-bold text-gray-300 mb-2 tracking-widest">REST &amp; RECOVER</h2>
-            <p class="font-body text-gray-500 text-base leading-relaxed max-w-sm mx-auto">
-              Recovery is where gains happen. Your muscles are rebuilding stronger. Stay hydrated, eat well, sleep deep.
-            </p>
-            <div class="mt-6 grid grid-cols-3 gap-3 max-w-xs mx-auto">
-              <div class="bg-cyber-surface border border-cyber-border rounded p-3 text-center">
-                <div class="font-mono text-lg font-bold text-gray-300">8h</div>
-                <div class="font-mono text-[10px] text-gray-600 mt-0.5">SLEEP</div>
-              </div>
-              <div class="bg-cyber-surface border border-cyber-border rounded p-3 text-center">
-                <div class="font-mono text-lg font-bold text-gray-300">3L</div>
-                <div class="font-mono text-[10px] text-gray-600 mt-0.5">WATER</div>
-              </div>
-              <div class="bg-cyber-surface border border-cyber-border rounded p-3 text-center">
-                <div class="font-mono text-lg font-bold text-gray-300">✓</div>
-                <div class="font-mono text-[10px] text-gray-600 mt-0.5">PROTEIN</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Exercises Container -->
-      <div id="exercises-container" class="hidden space-y-5 animate-slide-up">
-
-        <!-- Workout Header -->
-        <div id="workout-header" class="flex items-center gap-3">
-          <div id="workout-badge" class="flex items-center gap-2 px-3 py-1.5 rounded font-mono text-xs font-bold tracking-widest border"></div>
-          <div class="flex-1 h-px bg-cyber-border"></div>
-          <span id="workout-date-label" class="font-mono text-xs text-cyber-muted"></span>
-        </div>
-
-        <!-- Exercise Cards Injected Here -->
-        <div id="exercise-cards-list" class="space-y-4"></div>
-
-        <!-- Finish Workout Button -->
-        <div class="pt-4 pb-2">
-          <button onclick="App.finishWorkout()"
-            id="finish-btn"
-            class="w-full py-4 font-display text-sm font-bold tracking-widest uppercase rounded border transition-all duration-300 relative overflow-hidden group">
-            <span class="relative z-10 flex items-center justify-center gap-2">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-              FINISH &amp; SAVE WORKOUT
-            </span>
-            <span class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transform transition-transform duration-700"></span>
-          </button>
-        </div>
-
+        <button onclick="saveProfile()" class="btn-cyan w-full" style="margin-top: 4px;">حفظ الملف الشخصي</button>
       </div>
     </div>
 
-    <!-- ─── HISTORY VIEW ─── -->
-    <div id="view-history" class="view-panel hidden animate-fade-in">
-      <div class="mb-6 flex items-center gap-3">
-        <span class="font-mono text-xs text-cyber-muted tracking-widest">// WORKOUT HISTORY</span>
-        <div class="flex-1 h-px bg-cyber-border"></div>
-        <button onclick="App.clearHistory()" class="font-mono text-xs text-red-500/70 hover:text-red-400 transition-colors tracking-wide">CLEAR ALL</button>
-      </div>
-      <div id="history-list" class="space-y-3">
-        <!-- Injected by JS -->
-      </div>
-    </div>
-
-    <!-- ─── ANALYTICS VIEW ─── -->
-    <div id="view-analytics" class="view-panel hidden animate-fade-in">
-      <div class="mb-6 flex items-center gap-2">
-        <span class="font-mono text-xs text-cyber-muted tracking-widest">// ANALYTICS ENGINE</span>
-        <div class="flex-1 h-px bg-cyber-border"></div>
-      </div>
-
-      <!-- Date Range Picker -->
-      <div class="bg-cyber-card border border-cyber-border rounded-lg p-4 mb-6 clip-card-sm">
-        <p class="font-mono text-xs text-cyber-muted tracking-widest mb-3">// DATE RANGE FILTER</p>
-        <div class="flex flex-wrap items-center gap-3">
-          <div class="flex items-center gap-2">
-            <label class="font-mono text-xs text-gray-500">FROM</label>
-            <input type="date" id="analytics-start" />
-          </div>
-          <div class="flex items-center gap-2">
-            <label class="font-mono text-xs text-gray-500">TO</label>
-            <input type="date" id="analytics-end" />
-          </div>
-          <button onclick="App.runAnalytics()"
-            class="px-4 py-2 bg-cyber-amber/10 border border-cyber-amber/50 text-cyber-amber font-mono text-xs font-bold tracking-widest rounded hover:bg-cyber-amber/20 transition-all hover:shadow-amberSm">
-            RUN ANALYSIS
-          </button>
+    <!-- Calculated stats -->
+    <div class="card p-4 mb-4">
+      <div style="font-weight: 700; font-size: 14px; color: #e8f4f8; margin-bottom: 12px;">المؤشرات المحسوبة</div>
+      <div class="grid grid-cols-2 gap-3">
+        <div class="p-3 rounded-xl text-center" style="background: rgba(0,229,255,0.05); border: 1px solid rgba(0,229,255,0.12);">
+          <div style="font-size: 10px; color: #4a6070; margin-bottom: 2px;">BMI</div>
+          <div id="calc-bmi" style="font-family: 'JetBrains Mono'; font-size: 18px; font-weight: 700; color: #00e5ff;">—</div>
         </div>
-      </div>
-
-      <!-- Analytics Output -->
-      <div id="analytics-output">
-        <div class="text-center py-16 text-gray-600">
-          <svg class="mx-auto mb-4 opacity-30" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-          <p class="font-mono text-sm tracking-widest">SET A DATE RANGE TO RUN ANALYSIS</p>
+        <div class="p-3 rounded-xl text-center" style="background: rgba(0,255,135,0.05); border: 1px solid rgba(0,255,135,0.12);">
+          <div style="font-size: 10px; color: #4a6070; margin-bottom: 2px;">TDEE يومي</div>
+          <div id="calc-tdee" style="font-family: 'JetBrains Mono'; font-size: 18px; font-weight: 700; color: #00ff87;">—</div>
+        </div>
+        <div class="p-3 rounded-xl text-center" style="background: rgba(255,107,53,0.05); border: 1px solid rgba(255,107,53,0.12);">
+          <div style="font-size: 10px; color: #4a6070; margin-bottom: 2px;">هدف البروتين</div>
+          <div id="calc-protein" style="font-family: 'JetBrains Mono'; font-size: 18px; font-weight: 700; color: #ff6b35;">—</div>
+        </div>
+        <div class="p-3 rounded-xl text-center" style="background: rgba(255,215,0,0.05); border: 1px solid rgba(255,215,0,0.12);">
+          <div style="font-size: 10px; color: #4a6070; margin-bottom: 2px;">الوزن المثالي</div>
+          <div id="calc-ideal" style="font-family: 'JetBrains Mono'; font-size: 18px; font-weight: 700; color: #ffd700;">—</div>
         </div>
       </div>
     </div>
 
-  </main>
-</div>
-
-<!-- ═══════════════════ TOAST ═══════════════════ -->
-<div id="toast">
-  <div id="toast-inner" class="flex items-center gap-3 px-5 py-3 bg-cyber-card border rounded-lg font-mono text-sm font-bold tracking-wide shadow-lg">
-    <span id="toast-icon"></span>
-    <span id="toast-msg"></span>
-  </div>
-</div>
-
-<!-- ═══════════════════ HISTORY DETAIL MODAL ═══════════════════ -->
-<div id="modal-backdrop" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70 p-4" onclick="App.closeModal(event)">
-  <div id="modal-content" class="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-cyber-card border border-cyber-border rounded-lg clip-card" onclick="event.stopPropagation()">
-    <div class="p-5">
-      <div class="flex items-center justify-between mb-4">
-        <h3 id="modal-title" class="font-display text-sm font-bold tracking-widest text-gray-200"></h3>
-        <button onclick="App.closeModal()" class="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-gray-200 transition-colors">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </button>
+    <!-- Gemini key in profile too -->
+    <div class="card p-4">
+      <div style="font-weight: 700; font-size: 14px; color: #e8f4f8; margin-bottom: 10px; display: flex; align-items: center; gap-2;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ff6b35" stroke-width="2"><path d="M15 7a4 4 0 0 1-4 4H7M3 21l6-6M14.5 9.5L21 3M21 3h-5M21 3v5"/></svg>
+        مفتاح Gemini API
       </div>
-      <div id="modal-body"></div>
+      <div class="flex gap-2">
+        <input type="password" id="gemini-key-input-2" class="input-field" placeholder="AIza..." style="flex: 1;" />
+        <button onclick="saveGeminiKey2()" class="btn-cyan" style="padding: 10px 16px; font-size: 13px;">حفظ</button>
+      </div>
+      <div id="gemini-key-status" style="font-size: 11px; color: #4a6070; margin-top: 6px;">
+        احصل على مفتاحك مجاناً من <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: #00e5ff; text-decoration: underline;">Google AI Studio</a>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ============================================================
+     BOTTOM NAV
+============================================================ -->
+<nav class="bottom-nav">
+  <button class="nav-btn active" id="nav-workout" onclick="switchSection('workout')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 4v16M18 4v16M6 12h12M4 6h4M16 6h4M4 18h4M16 18h4"/></svg>
+    <span>تمرين</span>
+  </button>
+  <button class="nav-btn" id="nav-nutrition" onclick="switchSection('nutrition')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 8v4l2 2"/><circle cx="18" cy="6" r="4"/></svg>
+    <span>تغذية</span>
+  </button>
+  <button class="nav-btn" id="nav-analytics" onclick="switchSection('analytics')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    <span>تحليل</span>
+  </button>
+  <button class="nav-btn" id="nav-profile" onclick="switchSection('profile')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+    <span>ملف</span>
+  </button>
+</nav>
+
+<!-- ============================================================
+     PROFILE QUICK MODAL
+============================================================ -->
+<div id="profile-modal" class="modal-overlay hidden">
+  <div class="modal-sheet" style="max-height: 60vh;">
+    <div class="modal-handle"></div>
+    <div class="flex items-center justify-between mb-4">
+      <div style="font-weight: 700; font-size: 16px; color: #e8f4f8;">تعديل سريع</div>
+      <button onclick="closeProfileModal()" style="background: none; border: none; color: #4a6070; cursor: pointer; padding: 4px;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="space-y-3">
+      <div>
+        <label style="font-size: 11px; color: #4a6070; display: block; margin-bottom: 4px;">اسمك</label>
+        <input type="text" id="modal-name" class="input-field" placeholder="اسمك" />
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label style="font-size: 11px; color: #4a6070; display: block; margin-bottom: 4px;">الوزن (كيلو)</label>
+          <input type="number" id="modal-weight" class="input-field" step="0.1" />
+        </div>
+        <div>
+          <label style="font-size: 11px; color: #4a6070; display: block; margin-bottom: 4px;">الطول (سم)</label>
+          <input type="number" id="modal-height" class="input-field" />
+        </div>
+      </div>
+      <button onclick="saveProfileModal()" class="btn-cyan w-full">حفظ وإغلاق</button>
     </div>
   </div>
 </div>
 
-<!-- ═══════════════════ MAIN APP SCRIPT ═══════════════════ -->
+<!-- ============================================================
+     EXERCISE LOG MODAL (bottom sheet)
+============================================================ -->
+<div id="log-modal" class="modal-overlay hidden">
+  <div class="modal-sheet" style="max-height: 80vh;">
+    <div class="modal-handle"></div>
+    <div id="log-modal-content"></div>
+  </div>
+</div>
+
+<!-- ============================================================
+     TOAST NOTIFICATION
+============================================================ -->
+<div id="toast" style="position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px); background: #111927; border: 1px solid rgba(0,229,255,0.3); color: #e8f4f8; border-radius: 12px; padding: 10px 20px; font-size: 13px; font-weight: 600; z-index: 200; opacity: 0; transition: all 0.3s; pointer-events: none; white-space: nowrap; max-width: calc(100vw - 32px); text-align: center;"></div>
+
+<!-- ============================================================
+     JAVASCRIPT
+============================================================ -->
 <script>
-/* ================================================================
-   ANTPOST GYM TRACKER — ANTERIOR / POSTERIOR SPLIT
-   ================================================================ */
+// ================================================================
+// CONSTANTS & WORKOUT DATA
+// ================================================================
+const CRUNCHES_BASE_WEIGHT = 24; // kg — represents ~30% of 79kg upper torso
 
-'use strict';
-
-// ── EXERCISE DATABASE ──────────────────────────────────────────
-// القاعدة: كل تمرين بكارت منفصل — مفيش دمج بين التمارين
-const EXERCISE_DB = {
+const WORKOUT_DATA = {
   anterior: {
-    label:    'ANTERIOR // الأمامي',
-    color:    'amber',
-    accent:   '#f59e0b',
-    dimAccent:'#b45309',
+    nameAr: 'يوم الأمامي',
+    nameEn: 'Anterior Day',
+    muscles: 'صدر • ثلاثي • كتف أمامي • أمامي فخذ',
+    color: '#00e5ff',
     exercises: [
-      // ── صدر ──────────────────────────
       {
-        id:     'flat-bench-press',
-        name:   'Flat Bench Press',
-        arabic: 'بنش فلات',
-        muscle: 'Chest',
-        target: '2 × 8-12 Reps',
-        sets:   2,
+        id: 'bench_press',
+        nameAr: 'بنش برس (صدر)',
+        nameEn: 'Bench Press',
+        muscle: 'صدر',
+        sets: 2,
+        reps: '8-12',
+        img: null,
+        hasBodyweight: false,
+        tip: 'حافظ على كتفيك مثبتتين على المقعد. المسافة بين اليدين أعرض من الكتفين قليلاً.'
       },
       {
-        id:     'incline-bench-press',
-        name:   'Incline Bench Press',
-        arabic: 'بنش مائل',
-        muscle: 'Chest',
-        target: '2 × 8-12 Reps',
-        sets:   2,
+        id: 'incline_db',
+        nameAr: 'دمبل مائل (صدر علوي)',
+        nameEn: 'Incline Dumbbell Press',
+        muscle: 'صدر علوي',
+        sets: 2,
+        reps: '10-12',
+        img: null,
+        hasBodyweight: false,
+        tip: 'زاوية 30-45 درجة. ركز على الشعور بالصدر العلوي وليس الكتف.'
       },
       {
-        id:     'butterfly',
-        name:   'Butterfly (Pec Deck)',
-        arabic: 'فراشة / بيك ديك',
-        muscle: 'Chest',
-        target: '2 × 10-12 Reps',
-        sets:   2,
-      },
-      // ── كتف ──────────────────────────
-      {
-        id:     'shoulder-press-machine',
-        name:   'Shoulder Press Machine',
-        arabic: 'ضغط أكتاف بالجهاز',
-        muscle: 'Shoulders',
-        target: '2 × 8-12 Reps',
-        sets:   2,
+        id: 'tricep_pushdown',
+        nameAr: 'ترايسبس كيبل (ثلاثي)',
+        nameEn: 'Tricep Pushdown',
+        muscle: 'ثلاثي',
+        sets: 2,
+        reps: '12-15',
+        img: null,
+        hasBodyweight: false,
+        tip: 'الكوع ثابت على جانب الجسم. تمدد كامل في الأسفل مع ضغط الثلاثي.'
       },
       {
-        id:     'lateral-dumbbell-raises',
-        name:   'Lateral Dumbbell Raises',
-        arabic: 'رفع جانبي دمبلز',
-        muscle: 'Shoulders',
-        target: '2 × 12-15 Reps',
-        sets:   2,
+        id: 'shoulder_press',
+        nameAr: 'ضغط كتف دمبل',
+        nameEn: 'Dumbbell Shoulder Press',
+        muscle: 'كتف أمامي',
+        sets: 2,
+        reps: '10-12',
+        img: null,
+        hasBodyweight: false,
+        tip: 'لا ترفع أكثر من 90 درجة. حافظ على الظهر مستقيماً.'
       },
       {
-        id:     'front-dumbbell-raises',
-        name:   'Front Dumbbell Raises',
-        arabic: 'رفع أمامي دمبلز',
-        muscle: 'Shoulders',
-        target: '2 × 12-15 Reps',
-        sets:   2,
-      },
-      // ── تراي ──────────────────────────
-      {
-        id:     'rope-pushdown',
-        name:   'Rope Pushdown',
-        arabic: 'دفع حبل سفلي',
-        muscle: 'Triceps',
-        target: '2 × 10-12 Reps',
-        sets:   2,
+        id: 'leg_press',
+        nameAr: 'ليج برس (أمامي فخذ)',
+        nameEn: 'Leg Press',
+        muscle: 'كواد',
+        sets: 2,
+        reps: '12-15',
+        img: null,
+        hasBodyweight: false,
+        tip: 'القدمان بعرض الكتفين. لا تقفل الركبة كلياً في القمة.'
       },
       {
-        id:     'cable-overhead-extension',
-        name:   'Cable Overhead Extension',
-        arabic: 'تمديد تراي علوي بالكابل',
-        muscle: 'Triceps',
-        target: '2 × 10-12 Reps',
-        sets:   2,
-      },
-      // ── بطن ──────────────────────────
-      {
-        id:     'crunches',
-        name:   'Crunches',
-        arabic: 'كرنشات',
-        muscle: 'Abs',
-        target: '2 × 15-20 Reps',
-        sets:   2,
-      },
-      {
-        id:     'rope-weighted-cable-crunches',
-        name:   'Rope Weighted Cable Crunches',
-        arabic: 'كرنشات بالحبل والكابل',
-        muscle: 'Abs',
-        target: '2 × 15 Reps',
-        sets:   2,
-      },
-      // ── رجل أمامي ──────────────────────────
-      {
-        id:     'leg-extension',
-        name:   'Leg Extension / Leg Press',
-        arabic: 'مد أرجل / ضغط أرجل',
-        muscle: 'Quads',
-        target: '2 × 10-12 Reps',
-        sets:   2,
+        id: 'crunches',
+        nameAr: 'كرانشز (بطن)',
+        nameEn: 'Weighted Crunches',
+        muscle: 'بطن',
+        sets: 2,
+        reps: '15-20',
+        img: null,
+        hasBodyweight: true,
+        tip: `الوزن الأساسي = ${CRUNCHES_BASE_WEIGHT}kg (ثقل الجذع التقريبي). إذا حملت دمبل، يُضاف فوق الأساسي.`
       },
     ]
   },
   posterior: {
-    label:    'POSTERIOR // الخلفي',
-    color:    'blue',
-    accent:   '#3b82f6',
-    dimAccent:'#1d4ed8',
+    nameAr: 'يوم الخلفي',
+    nameEn: 'Posterior Day',
+    muscles: 'ظهر • ثنائي • كتف خلفي • مؤخرة فخذ • ترابيس',
+    color: '#a78bfa',
     exercises: [
-      // ── ضهر ──────────────────────────
       {
-        id:     'lat-pulldown',
-        name:   'Lat Pulldown',
-        arabic: 'شد أمامي',
-        muscle: 'Back — Lats',
-        target: '2 × 8-12 Reps',
-        sets:   2,
+        id: 'deadlift',
+        nameAr: 'ديدليفت (ظهر كامل)',
+        nameEn: 'Deadlift',
+        muscle: 'ظهر كامل',
+        sets: 2,
+        reps: '5-8',
+        img: null,
+        hasBodyweight: false,
+        tip: 'الظهر مستقيم دائماً. الشريط قريب من الجسم. النظر أمامك وليس للأسفل.'
       },
       {
-        id:     'cable-row',
-        name:   'Cable Row',
-        arabic: 'رووينج كابل',
-        muscle: 'Back — Mid',
-        target: '2 × 8-10 Reps',
-        sets:   2,
+        id: 'pull_down',
+        nameAr: 'لات بول داون (عريض)',
+        nameEn: 'Lat Pulldown',
+        muscle: 'عريض ظهر',
+        sets: 2,
+        reps: '10-12',
+        img: null,
+        hasBodyweight: false,
+        tip: 'اسحب للصدر، ليس للرقبة. مرفقاك للأسفل وللخلف.'
       },
       {
-        id:     'straight-arm-pulldown',
-        name:   'Straight-Arm Pulldown',
-        arabic: 'شد مستقيم الذراع',
-        muscle: 'Back — Lats',
-        target: '2 × 10-12 Reps',
-        sets:   2,
+        id: 'seated_row',
+        nameAr: 'صف جالس كيبل (ظهر وسط)',
+        nameEn: 'Seated Cable Row',
+        muscle: 'ظهر وسط',
+        sets: 2,
+        reps: '12-15',
+        img: null,
+        hasBodyweight: false,
+        tip: 'اسحب للسرة. حافظ على وضعية الجذع. لا تتأرجح.'
       },
       {
-        id:     'face-pull',
-        name:   'Face Pull',
-        arabic: 'فيس بول',
-        muscle: 'Upper Back',
-        target: '2 × 12-15 Reps',
-        sets:   2,
+        id: 'bicep_curl',
+        nameAr: 'كيرل دمبل (ثنائي)',
+        nameEn: 'Dumbbell Bicep Curl',
+        muscle: 'ثنائي',
+        sets: 2,
+        reps: '12-15',
+        img: null,
+        hasBodyweight: false,
+        tip: 'الكوع ثابت على الجانب. ضغط كامل في القمة. نزول بطيء.'
       },
       {
-        id:     'back-extension',
-        name:   'Back Extension',
-        arabic: 'تمديد ظهر',
-        muscle: 'Lower Back',
-        target: '2 × 12-15 Reps',
-        sets:   2,
-      },
-      // ── رجل خلفي ──────────────────────────
-      {
-        id:     'seated-leg-curl',
-        name:   'Seated Leg Curl',
-        arabic: 'كيرل أرجل جالس',
-        muscle: 'Hamstrings',
-        target: '2 × 10-12 Reps',
-        sets:   2,
-      },
-      // ── سمانة ──────────────────────────
-      {
-        id:     'calf-raises',
-        name:   'Calf Raises',
-        arabic: 'سمانة',
-        muscle: 'Calves',
-        target: '2 × 15-20 Reps',
-        sets:   2,
-      },
-      // ── كتف خلفي ──────────────────────────
-      {
-        id:     'reverse-fly',
-        name:   'Reverse Fly (Pec Deck)',
-        arabic: 'فراشة عكسية',
-        muscle: 'Rear Delts',
-        target: '2 × 12-15 Reps',
-        sets:   2,
-      },
-      // ── باي ──────────────────────────
-      {
-        id:     'close-grip-cable-curl',
-        name:   'Close Grip Cable Curl',
-        arabic: 'كيرل كابل قبضة ضيقة',
-        muscle: 'Biceps',
-        target: '2 × 10-12 Reps',
-        sets:   2,
+        id: 'rdl',
+        nameAr: 'RDL رومانياني (خلفي فخذ)',
+        nameEn: 'Romanian Deadlift',
+        muscle: 'خلفي فخذ',
+        sets: 2,
+        reps: '10-12',
+        img: null,
+        hasBodyweight: false,
+        tip: 'الركبة منحنية قليلاً. ادفع المؤخرة للخلف. اشعر بالشد في أوتار الركبة.'
       },
       {
-        id:     'dumbbell-preacher-curl',
-        name:   'Dumbbell Preacher Curl',
-        arabic: 'بريتشر كيرل دمبلز',
-        muscle: 'Biceps',
-        target: '2 × 10-12 Reps',
-        sets:   2,
+        id: 'db_shrugs',
+        nameAr: 'ترابيس بالدمبل',
+        nameEn: 'Dumbbell Shrugs',
+        muscle: 'ترابيس',
+        sets: 2,
+        reps: '12-15',
+        img: null,
+        hasBodyweight: false,
+        tip: 'ارفع الكتفين للأعلى فقط — لا تدور. ثانية ثبات في القمة. وزن ثقيل مناسب.',
+        badge: 'جديد'
       },
     ]
   }
 };
 
-const DAYS = ['Saturday','Sunday','Monday','Tuesday','Wednesday','Thursday','Friday'];
-const DAY_SHORT = ['SAT','SUN','MON','TUE','WED','THU','FRI'];
+// ================================================================
+// STATE
+// ================================================================
+let currentDay = 'anterior';
+let currentSection = 'workout';
 
-// ── STATE ──────────────────────────────────────────────────────
-const State = {
-  currentDay:     DAYS[0],
-  currentView:    'workout',
-  workoutTypes:   {},   // { dayName: 'anterior' | 'posterior' | 'rest' }
-  sessionData:    {},   // { dayName: { exerciseId: { setIndex: { weight, reps, done } } } }
-  history:        [],   // [{ id, date, day, type, exercises: [...], timestamp }]
-
-  init() {
-    this.workoutTypes  = JSON.parse(localStorage.getItem('apex_workout_types') || '{}');
-    this.sessionData   = JSON.parse(localStorage.getItem('apex_session_data')  || '{}');
-    this.history       = JSON.parse(localStorage.getItem('apex_history')       || '[]');
-
-    // Determine current day
-    const jsDay = new Date().getDay(); // 0=Sun
-    // Map: Sun=1 Mon=2 Tue=3 Wed=4 Thu=5 Fri=6 Sat=0
-    const dayMap = { 6: 0, 0: 1, 1: 2, 2: 3, 3: 4, 4: 5, 5: 6 };
-    this.currentDay = DAYS[dayMap[jsDay] ?? 0];
-  },
-
-  save() {
-    localStorage.setItem('apex_workout_types', JSON.stringify(this.workoutTypes));
-    localStorage.setItem('apex_session_data',  JSON.stringify(this.sessionData));
-    localStorage.setItem('apex_history',       JSON.stringify(this.history));
-  },
-
-  getType(day) { return this.workoutTypes[day] || null; },
-
-  setType(day, type) {
-    this.workoutTypes[day] = type;
-    this.save();
-  },
-
-  getSetData(day, exId, setIdx) {
-    return this.sessionData?.[day]?.[exId]?.[setIdx] || { weight: '', reps: '', done: false };
-  },
-
-  updateSet(day, exId, setIdx, field, value) {
-    if (!this.sessionData[day])         this.sessionData[day] = {};
-    if (!this.sessionData[day][exId])   this.sessionData[day][exId] = {};
-    if (!this.sessionData[day][exId][setIdx]) this.sessionData[day][exId][setIdx] = { weight:'', reps:'', done:false };
-    this.sessionData[day][exId][setIdx][field] = value;
-    this.save();
-  },
-
-  clearDay(day) {
-    delete this.sessionData[day];
-    this.save();
+function safeGet(key, fallback = null) {
+  try {
+    const val = localStorage.getItem(key);
+    if (val === null || val === undefined) return fallback;
+    return JSON.parse(val);
+  } catch {
+    return fallback;
   }
-};
+}
 
-// ── APP CONTROLLER ─────────────────────────────────────────────
-const App = {
+function safeSave(key, value) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {}
+}
 
-  // ── Init ──
-  init() {
-    State.init();
-    this.renderHeader();
-    this.renderDaySelector();
-    this.renderWorkoutView();
-    this.switchView('workout');
-    this.updateNavStyles();
-  },
+// ================================================================
+// INIT
+// ================================================================
+document.addEventListener('DOMContentLoaded', () => {
+  updateTodayBadge();
+  loadProfile();
+  loadNutritionState();
+  renderExercises();
+  renderWorkoutHistory();
+  checkGeminiKey();
+  updateWorkoutProgress();
 
-  // ── Header date ──
-  renderHeader() {
-    const now  = new Date();
-    const opts = { weekday:'long', year:'numeric', month:'short', day:'numeric' };
-    const str  = now.toLocaleDateString('en-US', opts).toUpperCase();
-    const el   = document.getElementById('header-date');
-    if (el) el.textContent = str;
-    const el2  = document.getElementById('header-date-mobile');
-    if (el2) el2.textContent = str;
-  },
+  // Set default dates for analytics
+  const today = new Date();
+  const monthAgo = new Date(today);
+  monthAgo.setMonth(monthAgo.getMonth() - 1);
+  document.getElementById('date-to').value = today.toISOString().split('T')[0];
+  document.getElementById('date-from').value = monthAgo.toISOString().split('T')[0];
+});
 
-  // ── Day Selector ──
-  renderDaySelector() {
-    const container = document.getElementById('day-selector');
-    container.innerHTML = '';
-    DAYS.forEach((day, i) => {
-      const type = State.getType(day);
-      const isActive = day === State.currentDay;
-      let activeClass = '';
-      if (isActive) {
-        if (type === 'anterior')  activeClass = 'active-anterior';
-        else if (type === 'posterior') activeClass = 'active-posterior';
-        else if (type === 'rest') activeClass = 'active-rest';
-        else activeClass = 'border-gray-600 text-gray-300 bg-cyber-surface';
-      }
-      const dot = type
-        ? `<span class="absolute -top-1 -right-1 w-1.5 h-1.5 rounded-full ${type==='anterior'?'bg-amber-400':type==='posterior'?'bg-blue-400':'bg-gray-500'}"></span>`
-        : '';
-      container.innerHTML += `
-        <button
-          onclick="App.selectDay('${day}')"
-          class="day-btn relative flex flex-col items-center gap-1 py-2.5 px-1 rounded border border-cyber-border text-xs font-mono tracking-wide transition-all duration-200 hover:border-gray-500 ${isActive ? activeClass : 'text-gray-500'}"
-        >
-          ${dot}
-          <span class="font-bold text-[11px]">${DAY_SHORT[i]}</span>
-        </button>`;
-    });
-  },
+// ================================================================
+// DATE & HEADER
+// ================================================================
+function updateTodayBadge() {
+  const days = ['أحد','اثنين','ثلاثاء','أربعاء','خميس','جمعة','سبت'];
+  const now = new Date();
+  document.getElementById('today-badge').textContent = `${days[now.getDay()]} ${now.getDate()}/${now.getMonth()+1}`;
+}
 
-  selectDay(day) {
-    State.currentDay = day;
-    this.renderDaySelector();
-    this.renderWorkoutView();
-  },
+// ================================================================
+// SECTION NAVIGATION
+// ================================================================
+function switchSection(name) {
+  currentSection = name;
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(`section-${name}`).classList.add('active');
+  document.getElementById(`nav-${name}`).classList.add('active');
 
-  // ── Workout Type Buttons ──
-  setWorkoutType(type) {
-    State.setType(State.currentDay, type);
-    this.renderDaySelector();
-    this.renderWorkoutView();
-    App.toast(
-      type === 'anterior'  ? '🔥 Anterior workout set' :
-      type === 'posterior' ? '⚡ Posterior workout set' :
-      '💤 Rest day logged',
-      type === 'rest' ? 'neutral' : 'success'
-    );
-  },
+  if (name === 'analytics') {
+    renderWorkoutHistory();
+    const profile = safeGet('devgainz_profile', {});
+    if (profile.weight) document.getElementById('analytics-weight').textContent = profile.weight + 'kg';
+    computeTotalVolume();
+  }
+}
 
-  renderWorkoutType() {
-    const type = State.getType(State.currentDay);
-    // Update type button styles
-    ['anterior','posterior','rest'].forEach(t => {
-      const btn = document.getElementById(`btn-${t}`);
-      if (!btn) return;
-      btn.className = btn.className
-        .replace(/ text-amber-\w+/g,'').replace(/ text-blue-\w+/g,'').replace(/ text-gray-\w+/g,'')
-        .replace(/ border-amber-\w+/g,'').replace(/ border-blue-\w+/g,'').replace(/ border-gray-\w+/g,'')
-        .replace(/ bg-\S+/g,'').replace(/ shadow-\S+/g,'');
-      btn.classList.add('border-cyber-border','text-gray-500','bg-transparent');
-      if (t === type) {
-        btn.classList.remove('border-cyber-border','text-gray-500');
-        if (t === 'anterior')  { btn.classList.add('border-amber-500','text-amber-400','bg-amber-500/10','shadow-amberSm'); }
-        if (t === 'posterior') { btn.classList.add('border-blue-500','text-blue-400','bg-blue-500/10','shadow-blueSm'); }
-        if (t === 'rest')      { btn.classList.add('border-gray-600','text-gray-300','bg-gray-700/20'); }
-      }
-    });
-  },
+// ================================================================
+// WORKOUT DAY SWITCH
+// ================================================================
+function switchDay(day) {
+  currentDay = day;
+  document.getElementById('tab-ant').classList.toggle('active', day === 'anterior');
+  document.getElementById('tab-post').classList.toggle('active', day === 'posterior');
+  renderExercises();
+  updateWorkoutProgress();
+}
 
-  // ── Workout View ──
-  renderWorkoutView() {
-    const type = State.getType(State.currentDay);
-    const restCard     = document.getElementById('rest-day-card');
-    const exercisesDiv = document.getElementById('exercises-container');
-    const progressSec  = document.getElementById('progress-section');
+// ================================================================
+// RENDER EXERCISES
+// ================================================================
+function renderExercises() {
+  const data = WORKOUT_DATA[currentDay];
+  const container = document.getElementById('exercises-container');
+  const accent = data.color;
 
-    restCard.classList.add('hidden');
-    exercisesDiv.classList.add('hidden');
-    progressSec.classList.add('hidden');
+  // Day header
+  document.getElementById('day-title').textContent = data.nameAr;
+  document.getElementById('day-subtitle').textContent = data.muscles;
+  document.getElementById('workout-ring-fill').style.stroke = accent;
+  document.getElementById('workout-ring-text').style.color = accent;
 
-    this.renderWorkoutType();
+  container.innerHTML = '';
 
-    if (!type) return;
+  data.exercises.forEach((ex, idx) => {
+    const logKey = `devgainz_log_${currentDay}_${ex.id}`;
+    const savedLog = safeGet(logKey, { sets: [] });
+    const isDone = savedLog.sets && savedLog.sets.length >= ex.sets;
 
-    if (type === 'rest') {
-      restCard.classList.remove('hidden');
-      return;
+    const card = document.createElement('div');
+    card.className = `card card-hover exercise-card${isDone ? ' completed' : ''} p-4`;
+    card.id = `excard-${ex.id}`;
+    card.style.transition = 'all 0.3s';
+
+    // Generate sets inputs
+    let setsHtml = '';
+    for (let s = 0; s < ex.sets; s++) {
+      const setData = (savedLog.sets && savedLog.sets[s]) || {};
+      setsHtml += `
+        <div class="flex items-center gap-2">
+          <div style="width: 24px; height: 24px; border-radius: 50%; background: rgba(255,255,255,0.04); border: 1px solid #1e2d42; display: flex; align-items: center; justify-content: center; font-size: 10px; font-family: 'JetBrains Mono'; color: #4a6070; flex-shrink: 0;">${s+1}</div>
+          <div style="flex: 1;">
+            <label style="font-size: 10px; color: #4a6070; display: block; margin-bottom: 2px;">${ex.hasBodyweight && ex.id === 'crunches' ? 'دمبل إضافي (اختياري)' : 'الوزن (كيلو)'}</label>
+            <input type="number" id="inp-w-${ex.id}-${s}" class="input-field" placeholder="${ex.hasBodyweight ? '0' : '0'}" value="${setData.weight !== undefined ? setData.weight : ''}" min="0" step="0.5" style="text-align: center; padding: 8px;" />
+          </div>
+          <div style="flex: 1;">
+            <label style="font-size: 10px; color: #4a6070; display: block; margin-bottom: 2px;">التكرارات</label>
+            <input type="number" id="inp-r-${ex.id}-${s}" class="input-field" placeholder="${ex.reps.split('-')[0]}" value="${setData.reps !== undefined ? setData.reps : ''}" min="1" style="text-align: center; padding: 8px;" />
+          </div>
+        </div>`;
     }
 
-    const workout = EXERCISE_DB[type];
-    if (!workout) return;
+    card.innerHTML = `
+      <div class="flex items-start justify-between mb-3">
+        <div class="flex-1">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span style="font-weight: 700; font-size: 14px; color: #e8f4f8;">${ex.nameAr}</span>
+            ${ex.badge ? `<span class="badge badge-green" style="font-size: 9px;">${ex.badge}</span>` : ''}
+            ${isDone ? '<span class="badge badge-green">✓ مكتمل</span>' : ''}
+          </div>
+          <div class="flex items-center gap-2 mt-1">
+            <span class="badge badge-cyan">${ex.muscle}</span>
+            <span style="font-size: 11px; color: #4a6070; font-family: 'JetBrains Mono';">${ex.sets} sets × ${ex.reps} reps</span>
+          </div>
+        </div>
+      </div>
 
-    // Workout header
-    const badge = document.getElementById('workout-badge');
-    const isAmber = type === 'anterior';
-    badge.className = `flex items-center gap-2 px-3 py-1.5 rounded font-mono text-xs font-bold tracking-widest border ${
-      isAmber ? 'border-amber-500/50 text-amber-400 bg-amber-500/10' : 'border-blue-500/50 text-blue-400 bg-blue-500/10'
-    }`;
-    badge.innerHTML = `
-      <span class="w-1.5 h-1.5 rounded-full ${isAmber ? 'bg-amber-400' : 'bg-blue-400'} animate-pulse-slow"></span>
-      ${workout.label}
-    `;
-    document.getElementById('workout-date-label').textContent = State.currentDay.toUpperCase();
+      <!-- Tip -->
+      <div class="mb-3 px-3 py-2 rounded-xl" style="background: rgba(255,255,255,0.03); border-right: 3px solid ${accent};">
+        <div style="font-size: 11px; color: #8fabbe; line-height: 1.6;">${ex.tip}</div>
+      </div>
 
-    // Finish button style
-    const finishBtn = document.getElementById('finish-btn');
-    finishBtn.className = finishBtn.className
-      .replace(/border-\S+/g,'').replace(/text-\S+/g,'').replace(/bg-\S+/g,'').replace(/shadow-\S+/g,'').replace(/hover:shadow-\S+/g,'').trim();
-    finishBtn.className += isAmber
-      ? ' w-full py-4 font-display text-sm font-bold tracking-widest uppercase rounded border border-amber-500/50 text-amber-400 bg-amber-500/5 hover:bg-amber-500/15 hover:shadow-amberSm transition-all duration-300 relative overflow-hidden group'
-      : ' w-full py-4 font-display text-sm font-bold tracking-widest uppercase rounded border border-blue-500/50 text-blue-400 bg-blue-500/5 hover:bg-blue-500/15 hover:shadow-blueSm transition-all duration-300 relative overflow-hidden group';
+      <!-- Sets inputs -->
+      <div class="space-y-2 mb-3">
+        ${setsHtml}
+      </div>
 
-    // Render cards
-    this.renderExerciseCards(type, workout);
+      <button onclick="logExercise('${ex.id}', ${ex.sets})" class="btn-done w-full${isDone ? ' done' : ''}" id="btn-${ex.id}">
+        ${isDone ? '✓ تم التسجيل' : 'سجّل التمرين'}
+      </button>`;
 
-    exercisesDiv.classList.remove('hidden');
-    progressSec.classList.remove('hidden');
-    this.updateProgress(type);
-  },
+    container.appendChild(card);
+  });
+}
 
-  // ── Exercise Cards ──
-  renderExerciseCards(type, workout) {
-    const container = document.getElementById('exercise-cards-list');
-    container.innerHTML = '';
+// ================================================================
+// LOG EXERCISE
+// ================================================================
+function logExercise(exId, numSets) {
+  const ex = WORKOUT_DATA[currentDay].exercises.find(e => e.id === exId);
+  const sets = [];
 
-    // Add mode class to exercises container for CSS targeting
-    const exDiv = document.getElementById('exercises-container');
-    exDiv.classList.remove('anterior-mode','posterior-mode');
-    exDiv.classList.add(type === 'anterior' ? 'anterior-mode' : 'posterior-mode');
+  for (let s = 0; s < numSets; s++) {
+    const wEl = document.getElementById(`inp-w-${exId}-${s}`);
+    const rEl = document.getElementById(`inp-r-${exId}-${s}`);
 
-    const isAmber = type === 'anterior';
-    const accentBorder  = isAmber ? 'border-amber-500/30' : 'border-blue-500/30';
-    const accentHeader  = isAmber ? 'border-amber-500/20 bg-amber-500/5' : 'border-blue-500/20 bg-blue-500/5';
-    const accentBadge   = isAmber ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-blue-500/10 text-blue-400 border-blue-500/20';
-    const accentNum     = isAmber ? 'text-amber-500' : 'text-blue-500';
-    const accentColor   = isAmber ? '#f59e0b' : '#3b82f6';
-    const accentDim     = isAmber ? 'rgba(245,158,11,0.2)' : 'rgba(59,130,246,0.2)';
-    const accentFaint   = isAmber ? 'rgba(245,158,11,0.08)' : 'rgba(59,130,246,0.08)';
+    let weight = parseFloat(wEl?.value) || 0;
+    const reps = parseInt(rEl?.value) || 0;
 
-    // ── Group exercises by muscle for section headers ──
-    let lastMuscleGroup = null;
-    let cardIndex = 0;
+    // Crunches bodyweight logic
+    if (ex.hasBodyweight && exId === 'crunches') {
+      weight = CRUNCHES_BASE_WEIGHT + weight; // base 24kg + any extra dumbbell
+    }
 
-    workout.exercises.forEach((ex) => {
-      // Normalize muscle group label for grouping
-      const groupKey = ex.muscle.split(' — ')[0].split(' / ')[0].split(' ')[0]; // e.g. "Chest", "Shoulders", "Triceps"
-      const isNewGroup = groupKey !== lastMuscleGroup;
+    if (reps === 0) {
+      showToast('⚠️ أدخل عدد التكرارات');
+      return;
+    }
+    sets.push({ weight, reps, volume: weight * reps });
+  }
 
-      if (isNewGroup) {
-        lastMuscleGroup = groupKey;
-        // Muscle group section header
-        container.innerHTML += `
-          <div class="muscle-group-header" style="animation-delay:${cardIndex * 0.04}s">
-            <span class="label" style="color:${accentColor}; background:${accentFaint}; border: 1px solid ${accentDim};">${ex.muscle.toUpperCase()}</span>
-            <span class="line" style="background: linear-gradient(to right, ${accentDim}, transparent);"></span>
+  const logKey = `devgainz_log_${currentDay}_${exId}`;
+  const timestamp = new Date().toISOString();
+  safeSave(logKey, { sets, timestamp, exId, day: currentDay });
+
+  // Save to history
+  const histKey = `devgainz_history_${new Date().toISOString().split('T')[0]}_${currentDay}_${exId}`;
+  safeSave(histKey, { sets, timestamp, exId, day: currentDay, exName: ex.nameAr });
+
+  // Update card
+  const card = document.getElementById(`excard-${exId}`);
+  if (card) card.classList.add('completed');
+  const btn = document.getElementById(`btn-${exId}`);
+  if (btn) {
+    btn.classList.add('done');
+    btn.textContent = '✓ تم التسجيل';
+  }
+
+  const totalVol = sets.reduce((acc, s) => acc + s.volume, 0).toFixed(1);
+  showToast(`✓ ${ex.nameAr} — Volume: ${totalVol}kg`);
+  updateWorkoutProgress();
+}
+
+// ================================================================
+// WORKOUT PROGRESS RING
+// ================================================================
+function updateWorkoutProgress() {
+  const exercises = WORKOUT_DATA[currentDay].exercises;
+  let done = 0;
+  exercises.forEach(ex => {
+    const log = safeGet(`devgainz_log_${currentDay}_${ex.id}`, { sets: [] });
+    if (log.sets && log.sets.length >= ex.sets) done++;
+  });
+
+  const pct = Math.round((done / exercises.length) * 100);
+  const circumference = 138.2;
+  const offset = circumference - (circumference * pct / 100);
+  const ring = document.getElementById('workout-ring-fill');
+  const text = document.getElementById('workout-ring-text');
+  if (ring) ring.style.strokeDashoffset = offset;
+  if (text) text.textContent = `${pct}%`;
+}
+
+// ================================================================
+// RESET WORKOUT
+// ================================================================
+function resetWorkout() {
+  WORKOUT_DATA[currentDay].exercises.forEach(ex => {
+    localStorage.removeItem(`devgainz_log_${currentDay}_${ex.id}`);
+  });
+  renderExercises();
+  updateWorkoutProgress();
+  showToast('تم إعادة تعيين اليوم');
+}
+
+// ================================================================
+// PROFILE
+// ================================================================
+function loadProfile() {
+  const p = safeGet('devgainz_profile', {});
+  if (p.name) {
+    document.getElementById('p-name').value = p.name;
+    document.getElementById('profile-display-name').textContent = p.name;
+    document.getElementById('profile-avatar-text').textContent = p.name[0].toUpperCase();
+    document.getElementById('modal-name').value = p.name;
+  }
+  if (p.age) document.getElementById('p-age').value = p.age;
+  if (p.weight) {
+    document.getElementById('p-weight').value = p.weight;
+    document.getElementById('modal-weight').value = p.weight;
+  }
+  if (p.height) {
+    document.getElementById('p-height').value = p.height;
+    document.getElementById('modal-height').value = p.height;
+  }
+  if (p.goal) document.getElementById('p-goal').value = p.goal;
+  computeProfileStats();
+}
+
+function saveProfile() {
+  const name = document.getElementById('p-name').value.trim();
+  const age = parseInt(document.getElementById('p-age').value) || 16;
+  const weight = parseFloat(document.getElementById('p-weight').value) || 79;
+  const height = parseFloat(document.getElementById('p-height').value) || 175;
+  const goal = document.getElementById('p-goal').value;
+
+  safeSave('devgainz_profile', { name, age, weight, height, goal });
+
+  if (name) {
+    document.getElementById('profile-display-name').textContent = name;
+    document.getElementById('profile-avatar-text').textContent = name[0].toUpperCase();
+    document.getElementById('modal-name').value = name;
+  }
+  document.getElementById('modal-weight').value = weight;
+  document.getElementById('modal-height').value = height;
+
+  computeProfileStats();
+  updateMacroGoals(weight, goal);
+  showToast('✓ تم حفظ الملف الشخصي');
+}
+
+function computeProfileStats() {
+  const p = safeGet('devgainz_profile', { weight: 79, height: 175, age: 16 });
+  const w = p.weight || 79;
+  const h = p.height || 175;
+  const a = p.age || 16;
+  const goal = p.goal || 'bulk';
+
+  const bmi = (w / ((h/100)**2)).toFixed(1);
+  // Harris-Benedict for males (assumption based on context)
+  const bmr = 88.362 + (13.397 * w) + (4.799 * h) - (5.677 * a);
+  const tdee = Math.round(bmr * 1.55); // moderately active
+  const proteinGoal = Math.round(w * 2); // 2g/kg for muscle building
+  const idealWeight = Math.round(50 + 0.91 * (h - 152.4)); // Devine formula
+
+  const bmiEl = document.getElementById('calc-bmi');
+  const tdeeEl = document.getElementById('calc-tdee');
+  const proteinEl = document.getElementById('calc-protein');
+  const idealEl = document.getElementById('calc-ideal');
+
+  if (bmiEl) bmiEl.textContent = bmi;
+  if (tdeeEl) tdeeEl.textContent = `${tdee} kcal`;
+  if (proteinEl) proteinEl.textContent = `${proteinGoal}g`;
+  if (idealEl) idealEl.textContent = `${idealWeight}kg`;
+
+  if (document.getElementById('analytics-weight')) {
+    document.getElementById('analytics-weight').textContent = w + 'kg';
+  }
+}
+
+function updateMacroGoals(weight, goal) {
+  const protein = Math.round(weight * 2);
+  const carbs = Math.round(weight * (goal === 'cut' ? 3 : 4.5));
+  const fats = Math.round(weight * 1);
+  const calories = (protein * 4) + (carbs * 4) + (fats * 9);
+
+  document.getElementById('goal-cal').textContent = calories;
+  document.getElementById('goal-pro').textContent = protein;
+  document.getElementById('goal-carb').textContent = carbs;
+  document.getElementById('goal-fat').textContent = fats;
+}
+
+// ================================================================
+// PROFILE MODAL (quick access from header)
+// ================================================================
+function openProfileModal() {
+  const p = safeGet('devgainz_profile', {});
+  if (p.name) document.getElementById('modal-name').value = p.name;
+  if (p.weight) document.getElementById('modal-weight').value = p.weight;
+  if (p.height) document.getElementById('modal-height').value = p.height;
+  document.getElementById('profile-modal').classList.remove('hidden');
+}
+
+function closeProfileModal() {
+  document.getElementById('profile-modal').classList.add('hidden');
+}
+
+function saveProfileModal() {
+  const p = safeGet('devgainz_profile', {});
+  p.name = document.getElementById('modal-name').value.trim() || p.name;
+  p.weight = parseFloat(document.getElementById('modal-weight').value) || p.weight;
+  p.height = parseFloat(document.getElementById('modal-height').value) || p.height;
+  safeSave('devgainz_profile', p);
+
+  // Sync main profile fields
+  if (p.name) {
+    document.getElementById('p-name').value = p.name;
+    document.getElementById('profile-display-name').textContent = p.name;
+    document.getElementById('profile-avatar-text').textContent = p.name[0].toUpperCase();
+  }
+  if (p.weight) document.getElementById('p-weight').value = p.weight;
+  if (p.height) document.getElementById('p-height').value = p.height;
+
+  computeProfileStats();
+  closeProfileModal();
+  showToast('✓ تم تحديث البيانات');
+}
+
+document.getElementById('profile-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeProfileModal();
+});
+
+// ================================================================
+// GEMINI API KEY
+// ================================================================
+function saveGeminiKey() {
+  const key = document.getElementById('gemini-key-input').value.trim();
+  if (!key) return showToast('⚠️ أدخل المفتاح أولاً');
+  safeSave('devgainz_gemini_key', key);
+  document.getElementById('api-key-banner').style.display = 'none';
+  showToast('✓ تم حفظ مفتاح Gemini');
+}
+
+function saveGeminiKey2() {
+  const key = document.getElementById('gemini-key-input-2').value.trim();
+  if (!key) return showToast('⚠️ أدخل المفتاح أولاً');
+  safeSave('devgainz_gemini_key', key);
+  document.getElementById('gemini-key-status').innerHTML = '<span style="color: #00ff87;">✓ تم حفظ المفتاح</span>';
+  showToast('✓ تم حفظ مفتاح Gemini');
+}
+
+function checkGeminiKey() {
+  const key = safeGet('devgainz_gemini_key');
+  if (key) {
+    document.getElementById('api-key-banner').style.display = 'none';
+    document.getElementById('gemini-key-status').innerHTML = '<span style="color: #00ff87;">✓ المفتاح محفوظ ومفعّل</span>';
+  }
+}
+
+// ================================================================
+// NUTRITION STATE
+// ================================================================
+function loadNutritionState() {
+  const today = new Date().toISOString().split('T')[0];
+  const saved = safeGet('devgainz_nutrition_' + today, { cal: 0, protein: 0, carbs: 0, fats: 0, water: 0 });
+  updateNutritionUI(saved);
+
+  const p = safeGet('devgainz_profile', { weight: 79, goal: 'bulk' });
+  updateMacroGoals(p.weight || 79, p.goal || 'bulk');
+}
+
+function getNutritionState() {
+  const today = new Date().toISOString().split('T')[0];
+  return safeGet('devgainz_nutrition_' + today, { cal: 0, protein: 0, carbs: 0, fats: 0, water: 0 });
+}
+
+function saveNutritionState(state) {
+  const today = new Date().toISOString().split('T')[0];
+  safeSave('devgainz_nutrition_' + today, state);
+}
+
+function updateNutritionUI(state) {
+  const goals = {
+    cal: parseInt(document.getElementById('goal-cal').textContent) || 2800,
+    pro: parseInt(document.getElementById('goal-pro').textContent) || 158,
+    carb: parseInt(document.getElementById('goal-carb').textContent) || 350,
+    fat: parseInt(document.getElementById('goal-fat').textContent) || 78,
+    water: parseFloat(document.getElementById('goal-water').textContent) || 3.0
+  };
+
+  document.getElementById('val-cal').textContent = Math.round(state.cal || 0);
+  document.getElementById('val-pro').textContent = Math.round(state.protein || 0) + 'g';
+  document.getElementById('val-carb').textContent = Math.round(state.carbs || 0) + 'g';
+  document.getElementById('val-fat').textContent = Math.round(state.fats || 0) + 'g';
+  document.getElementById('val-water').textContent = ((state.water || 0) / 1000).toFixed(2);
+
+  // Update rings
+  updateRing('ring-cal', state.cal, goals.cal);
+  updateRing('ring-pro', state.protein, goals.pro);
+  updateRing('ring-carb', state.carbs, goals.carb);
+  updateRing('ring-fat', state.fats, goals.fat);
+
+  // Water bar
+  const waterPct = Math.min(100, ((state.water || 0) / (goals.water * 1000)) * 100);
+  document.getElementById('water-bar').style.height = waterPct + '%';
+}
+
+function updateRing(id, value, goal) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const circumference = 150.8;
+  const pct = Math.min(1, (value || 0) / (goal || 1));
+  el.style.strokeDashoffset = circumference - (circumference * pct);
+}
+
+function addMacros(macros) {
+  const state = getNutritionState();
+  state.cal = (state.cal || 0) + (macros.calories || 0);
+  state.protein = (state.protein || 0) + (macros.protein || 0);
+  state.carbs = (state.carbs || 0) + (macros.carbs || 0);
+  state.fats = (state.fats || 0) + (macros.fats || 0);
+  saveNutritionState(state);
+  updateNutritionUI(state);
+}
+
+function addWater(ml) {
+  const state = getNutritionState();
+  state.water = (state.water || 0) + ml;
+  saveNutritionState(state);
+  updateNutritionUI(state);
+  showToast(`+${ml}ml 💧 المجموع: ${(state.water / 1000).toFixed(2)}L`);
+}
+
+function resetWater() {
+  const state = getNutritionState();
+  state.water = 0;
+  saveNutritionState(state);
+  updateNutritionUI(state);
+}
+
+function resetDailyNutrition() {
+  const today = new Date().toISOString().split('T')[0];
+  safeSave('devgainz_nutrition_' + today, { cal: 0, protein: 0, carbs: 0, fats: 0, water: 0 });
+  loadNutritionState();
+  showToast('تم إعادة تعيين الماكرو');
+}
+
+// ================================================================
+// GEMINI AI CHAT
+// ================================================================
+const SYSTEM_PROMPT = `You are DevGainz AI, a precise sports nutrition assistant for a 16-year-old male bodybuilder (79kg, Egypt). You communicate in Arabic.
+
+CRITICAL RULE: When the user mentions eating food, ALWAYS respond with a JSON block in this EXACT format, followed by your Arabic message:
+
+<NUTRITION_JSON>
+{"calories": 0, "protein": 0, "carbs": 0, "fats": 0}
+</NUTRITION_JSON>
+
+Then write your Arabic message explaining the nutritional breakdown, what muscle-building benefits this food provides, and one practical tip.
+
+If the user asks a general question (not logging food), skip the JSON and answer in helpful, motivating Arabic. Keep responses concise and practical. Address them as "صديق" occasionally.`;
+
+let chatHistory = [];
+
+async function sendChatMessage() {
+  const input = document.getElementById('chat-input');
+  const msg = input.value.trim();
+  if (!msg) return;
+
+  const apiKey = safeGet('devgainz_gemini_key');
+  if (!apiKey) {
+    showToast('⚠️ أدخل مفتاح Gemini API أولاً');
+    switchSection('nutrition');
+    document.getElementById('api-key-banner').style.display = 'block';
+    return;
+  }
+
+  input.value = '';
+  appendChatMessage('user', msg);
+  chatHistory.push({ role: 'user', parts: [{ text: msg }] });
+
+  // Show typing indicator
+  const typingId = 'typing-' + Date.now();
+  const typingEl = document.createElement('div');
+  typingEl.id = typingId;
+  typingEl.className = 'chat-ai typing';
+  typingEl.innerHTML = `<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#00e5ff;margin:0 2px;">•</span><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#00e5ff;margin:0 2px;">•</span><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#00e5ff;margin:0 2px;">•</span>`;
+  document.getElementById('chat-messages').appendChild(typingEl);
+  scrollChatToBottom();
+
+  const sendBtn = document.getElementById('chat-send-btn');
+  sendBtn.disabled = true;
+
+  try {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [
+          { role: 'user', parts: [{ text: SYSTEM_PROMPT }] },
+          { role: 'model', parts: [{ text: 'مفهوم! أنا مساعدك الغذائي الذكي DevGainz. يلا نبدأ!' }] },
+          ...chatHistory.slice(-10)
+        ],
+        generationConfig: { temperature: 0.7, maxOutputTokens: 600 }
+      })
+    });
+
+    const data = await response.json();
+
+    if (data.error) {
+      throw new Error(data.error.message || 'Gemini API error');
+    }
+
+    const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || 'عذراً، حدث خطأ في الاتصال.';
+
+    // Extract nutrition JSON if present
+    const jsonMatch = rawText.match(/<NUTRITION_JSON>([\s\S]*?)<\/NUTRITION_JSON>/);
+    let cleanText = rawText.replace(/<NUTRITION_JSON>[\s\S]*?<\/NUTRITION_JSON>/g, '').trim();
+
+    if (jsonMatch) {
+      try {
+        const nutrition = JSON.parse(jsonMatch[1].trim());
+        addMacros(nutrition);
+        const macroTags = `
+          <div class="flex flex-wrap gap-1 mt-2">
+            <span class="chat-macro-tag">🔥 ${Math.round(nutrition.calories)}kcal</span>
+            <span class="chat-macro-tag">💪 ${Math.round(nutrition.protein)}g P</span>
+            <span class="chat-macro-tag">⚡ ${Math.round(nutrition.carbs)}g C</span>
+            <span class="chat-macro-tag">🥑 ${Math.round(nutrition.fats)}g F</span>
           </div>`;
-      }
-
-      // Build set rows HTML
-      let setRowsHtml = '';
-      for (let s = 0; s < ex.sets; s++) {
-        const setData = State.getSetData(State.currentDay, ex.id, s);
-        const doneClass = setData.done ? 'done' : '';
-        setRowsHtml += `
-          <tr class="set-row border-b border-cyber-border/50 last:border-0 ${doneClass}" id="set-row-${ex.id}-${s}">
-            <td class="py-2.5 px-3 w-10">
-              <span class="set-num font-mono text-xs font-bold ${accentNum} ${setData.done ? '!text-green-400' : ''}">${s + 1}</span>
-            </td>
-            <td class="py-2.5 px-2">
-              <input
-                type="number"
-                min="0" max="999" step="0.5"
-                placeholder="—"
-                value="${setData.weight}"
-                aria-label="Weight kg set ${s+1} of ${ex.name}"
-                onchange="App.updateSetField('${ex.id}', ${s}, 'weight', this.value)"
-                oninput="App.updateSetField('${ex.id}', ${s}, 'weight', this.value)"
-              />
-            </td>
-            <td class="py-2.5 px-2">
-              <input
-                type="number"
-                min="0" max="999" step="1"
-                placeholder="—"
-                value="${setData.reps}"
-                aria-label="Reps set ${s+1} of ${ex.name}"
-                onchange="App.updateSetField('${ex.id}', ${s}, 'reps', this.value)"
-                oninput="App.updateSetField('${ex.id}', ${s}, 'reps', this.value)"
-              />
-            </td>
-            <td class="py-2.5 px-3 text-right">
-              <button
-                class="check-btn ${setData.done ? 'checked' : ''}"
-                onclick="App.toggleSetDone('${ex.id}', ${s})"
-                aria-label="Mark set ${s+1} done"
-                aria-pressed="${setData.done}"
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="20 6 9 17 4 12"/>
-                </svg>
-              </button>
-            </td>
-          </tr>`;
-      }
-
-      container.innerHTML += `
-        <div class="exercise-card bg-cyber-card border ${accentBorder} rounded-lg overflow-hidden animate-slide-up relative" style="animation-delay:${cardIndex * 0.05}s">
-
-          <!-- ── Exercise Header ── -->
-          <div class="border-b ${accentHeader} px-4 py-3 flex items-start gap-3">
-
-            <!-- ── IMAGE PLACEHOLDER ──────────────────────────────────────────
-                 Replace the div below with your <img> tag.
-                 Example:
-                   <img src="./images/${ex.id}.jpg" alt="${ex.name}"
-                        class="w-12 h-12 rounded object-cover border border-cyber-border flex-shrink-0" />
-                 ─────────────────────────────────────────────────────────────── -->
-            <div class="w-12 h-12 rounded border border-cyber-border/50 bg-cyber-surface flex-shrink-0 flex items-center justify-center overflow-hidden"
-                 title="IMAGE_PLACEHOLDER: Replace with <img src='./images/${ex.id}.jpg' ...>">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${accentColor}" stroke-width="1" opacity="0.4">
-                <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
-                <polyline points="21 15 16 10 5 21"/>
-              </svg>
-            </div>
-
-            <div class="flex-1 min-w-0">
-              <div class="flex items-center gap-2 flex-wrap">
-                <h3 class="font-body font-bold text-sm text-gray-200 leading-tight">${ex.name}</h3>
-                <span class="font-mono text-[10px] px-2 py-0.5 rounded border ${accentBadge}">${ex.muscle}</span>
-              </div>
-              <p class="font-mono text-[10px] text-gray-600 mt-0.5 leading-tight">${ex.arabic} · <span style="color:${accentColor};opacity:0.7">${ex.target}</span></p>
-            </div>
-
-            <!-- Volume mini display -->
-            <div class="flex-shrink-0 text-right">
-              <div id="vol-${ex.id}" class="font-mono text-xs" style="color:${accentColor};opacity:0.6">—</div>
-              <div class="font-mono text-[9px] text-gray-700 mt-0.5">VOL (kg)</div>
-            </div>
-          </div>
-
-          <!-- ── Sets Table ── -->
-          <div class="overflow-x-auto">
-            <table class="w-full exercise-table">
-              <thead>
-                <tr class="border-b border-cyber-border/50" style="background:${accentFaint}">
-                  <th class="py-2 px-3 text-left font-mono text-[10px] text-gray-600 tracking-widest w-10">SET</th>
-                  <th class="py-2 px-2 text-left font-mono text-[10px] text-gray-600 tracking-widest">WEIGHT (kg)</th>
-                  <th class="py-2 px-2 text-left font-mono text-[10px] text-gray-600 tracking-widest">REPS</th>
-                  <th class="py-2 px-3 text-right font-mono text-[10px] text-gray-600 tracking-widest">DONE</th>
-                </tr>
-              </thead>
-              <tbody>${setRowsHtml}</tbody>
-            </table>
-          </div>
-        </div>`;
-
-      cardIndex++;
-    });
-
-    // Update volume displays
-    workout.exercises.forEach(ex => this.updateExVol(ex.id));
-  },
-
-  // ── Set field update ──
-  updateSetField(exId, setIdx, field, value) {
-    State.updateSet(State.currentDay, exId, setIdx, field, value);
-    this.updateExVol(exId);
-  },
-
-  // ── Toggle set done ──
-  toggleSetDone(exId, setIdx) {
-    const current = State.getSetData(State.currentDay, exId, setIdx);
-    const newDone = !current.done;
-    State.updateSet(State.currentDay, exId, setIdx, 'done', newDone);
-    // Update UI
-    const row = document.getElementById(`set-row-${exId}-${setIdx}`);
-    if (row) {
-      row.classList.toggle('done', newDone);
-      const setNum = row.querySelector('.set-num');
-      if (setNum) {
-        setNum.classList.toggle('text-green-400', newDone);
-        setNum.classList.toggle('text-amber-500', !newDone);
-        setNum.classList.toggle('text-blue-500', !newDone);
-      }
-    }
-    const btn = row?.querySelector('.check-btn');
-    if (btn) {
-      btn.classList.toggle('checked', newDone);
-      btn.setAttribute('aria-pressed', newDone);
-    }
-    this.updateProgress(State.getType(State.currentDay));
-  },
-
-  // ── Volume display per exercise ──
-  updateExVol(exId) {
-    const el = document.getElementById(`vol-${exId}`);
-    if (!el) return;
-    const day = State.currentDay;
-    const exData = State.sessionData?.[day]?.[exId] || {};
-    let totalVol = 0;
-    Object.values(exData).forEach(s => {
-      const w = parseFloat(s.weight) || 0;
-      const r = parseInt(s.reps) || 0;
-      totalVol += w * r;
-    });
-    el.textContent = totalVol > 0 ? totalVol.toFixed(1) : '—';
-  },
-
-  // ── Progress bar ──
-  updateProgress(type) {
-    if (!type || type === 'rest') return;
-    const workout = EXERCISE_DB[type];
-    if (!workout) return;
-    let total = 0, done = 0;
-    workout.exercises.forEach(ex => {
-      for (let s = 0; s < ex.sets; s++) {
-        total++;
-        const d = State.getSetData(State.currentDay, ex.id, s);
-        if (d.done) done++;
-      }
-    });
-    const pct = total > 0 ? Math.round((done / total) * 100) : 0;
-    const bar = document.getElementById('progress-bar');
-    const txt = document.getElementById('progress-text');
-    const isAmber = type === 'anterior';
-    bar.style.width = pct + '%';
-    bar.className = `h-full rounded-full progress-bar-fill ${isAmber ? 'bg-gradient-to-r from-amber-600 to-amber-400' : 'bg-gradient-to-r from-blue-600 to-blue-400'}`;
-    if (txt) txt.textContent = `${done}/${total} SETS · ${pct}%`;
-  },
-
-  // ── Finish & Save Workout ──
-  finishWorkout() {
-    const type = State.getType(State.currentDay);
-    if (!type || type === 'rest') return;
-    const workout = EXERCISE_DB[type];
-    if (!workout) return;
-
-    // Build log entry
-    const logExercises = workout.exercises.map(ex => {
-      const sets = [];
-      for (let s = 0; s < ex.sets; s++) {
-        const d = State.getSetData(State.currentDay, ex.id, s);
-        sets.push({ setNum: s+1, weight: parseFloat(d.weight)||0, reps: parseInt(d.reps)||0, done: d.done });
-      }
-      return { id: ex.id, name: ex.name, muscle: ex.muscle, sets };
-    });
-
-    const entry = {
-      id:         Date.now().toString(36),
-      timestamp:  new Date().toISOString(),
-      date:       new Date().toLocaleDateString('en-CA'), // YYYY-MM-DD
-      day:        State.currentDay,
-      type,
-      exercises:  logExercises,
-      totalVolume: logExercises.reduce((acc, ex) =>
-        acc + ex.sets.reduce((s, set) => s + set.weight * set.reps, 0), 0)
-    };
-
-    State.history.unshift(entry);
-    State.clearDay(State.currentDay);
-    State.save();
-
-    this.renderWorkoutView();
-    App.toast('✅ Workout saved to history!', 'success');
-  },
-
-  // ── Switch View ──
-  switchView(view) {
-    State.currentView = view;
-    document.querySelectorAll('.view-panel').forEach(p => p.classList.add('hidden'));
-    const panel = document.getElementById(`view-${view}`);
-    if (panel) panel.classList.remove('hidden');
-
-    // Nav button styles
-    document.querySelectorAll('.nav-btn').forEach(btn => {
-      btn.className = btn.className
-        .replace(' bg-cyber-amber/20 text-amber-400','')
-        .replace(' text-gray-300','')
-        .replace(' text-gray-500','');
-    });
-    const activeNav = document.getElementById(`nav-${view}`);
-    const inactiveNavs = ['workout','history','analytics'].filter(v => v !== view);
-    if (activeNav) activeNav.className += ' bg-cyber-amber/20 text-amber-400';
-    inactiveNavs.forEach(v => {
-      const b = document.getElementById(`nav-${v}`);
-      if (b) b.className += ' text-gray-500';
-    });
-
-    if (view === 'history') this.renderHistory();
-    this.updateNavStyles();
-  },
-
-  updateNavStyles() {
-    // ensure correct active style is applied
-    ['workout','history','analytics'].forEach(v => {
-      const btn = document.getElementById(`nav-${v}`);
-      if (!btn) return;
-      btn.classList.remove('bg-cyber-amber/20','text-amber-400','text-gray-500','text-gray-300');
-      if (v === State.currentView) btn.classList.add('bg-cyber-amber/20','text-amber-400');
-      else btn.classList.add('text-gray-500');
-    });
-  },
-
-  // ── History View ──
-  renderHistory() {
-    const list = document.getElementById('history-list');
-    if (!list) return;
-    if (State.history.length === 0) {
-      list.innerHTML = `<div class="text-center py-16 text-gray-600">
-        <svg class="mx-auto mb-4 opacity-30" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-        <p class="font-mono text-sm tracking-widest">NO WORKOUT HISTORY YET</p>
-      </div>`;
-      return;
-    }
-    list.innerHTML = State.history.map(entry => {
-      const isAmber = entry.type === 'anterior';
-      const accentBorder = isAmber ? 'border-amber-500/20' : 'border-blue-500/20';
-      const accentText   = isAmber ? 'text-amber-400' : 'text-blue-400';
-      const typeLabel    = isAmber ? 'ANTERIOR' : 'POSTERIOR';
-      const date = new Date(entry.timestamp);
-      const dateStr = date.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' }).toUpperCase();
-      const timeStr = date.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' });
-      const vol = entry.totalVolume?.toFixed(0) || '0';
-      const doneSets = entry.exercises.reduce((a, ex) => a + ex.sets.filter(s => s.done).length, 0);
-      const totalSets = entry.exercises.reduce((a, ex) => a + ex.sets.length, 0);
-      return `
-        <div class="bg-cyber-card border ${accentBorder} rounded-lg p-4 clip-card-sm cursor-pointer hover:bg-cyber-surface transition-colors"
-             onclick="App.showHistoryDetail('${entry.id}')">
-          <div class="flex items-center justify-between gap-3">
-            <div class="flex items-center gap-3 min-w-0">
-              <div class="w-8 h-8 rounded ${isAmber ? 'bg-amber-500/10 border border-amber-500/20' : 'bg-blue-500/10 border border-blue-500/20'} flex items-center justify-center flex-shrink-0">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${isAmber ? '#f59e0b' : '#3b82f6'}" stroke-width="2"><path d="M6 4v16M18 4v16M1 12h4M19 12h4M6 8h12M6 16h12"/></svg>
-              </div>
-              <div class="min-w-0">
-                <div class="flex items-center gap-2 flex-wrap">
-                  <span class="font-mono text-xs font-bold ${accentText} tracking-widest">${typeLabel}</span>
-                  <span class="font-mono text-xs text-gray-600">${entry.day.toUpperCase()}</span>
-                </div>
-                <div class="font-mono text-[11px] text-gray-600 mt-0.5">${dateStr} · ${timeStr}</div>
-              </div>
-            </div>
-            <div class="flex items-center gap-4 flex-shrink-0">
-              <div class="text-right">
-                <div class="font-mono text-sm font-bold text-gray-300">${vol} <span class="text-[10px] text-gray-600">kg</span></div>
-                <div class="font-mono text-[9px] text-gray-600 mt-0.5">VOLUME</div>
-              </div>
-              <div class="text-right hidden sm:block">
-                <div class="font-mono text-sm font-bold text-gray-300">${doneSets}<span class="text-gray-600 text-xs">/${totalSets}</span></div>
-                <div class="font-mono text-[9px] text-gray-600 mt-0.5">SETS</div>
-              </div>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#374151" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-            </div>
-          </div>
-        </div>`;
-    }).join('');
-  },
-
-  showHistoryDetail(id) {
-    const entry = State.history.find(e => e.id === id);
-    if (!entry) return;
-    const isAmber = entry.type === 'anterior';
-    const accentText = isAmber ? 'text-amber-400' : 'text-blue-400';
-    const date = new Date(entry.timestamp);
-    const dateStr = date.toLocaleString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric', hour:'2-digit', minute:'2-digit' });
-
-    document.getElementById('modal-title').textContent = `${entry.type.toUpperCase()} · ${entry.day.toUpperCase()}`;
-
-    let bodyHtml = `<p class="font-mono text-xs text-gray-500 mb-4 tracking-wide">${dateStr.toUpperCase()}</p>`;
-    entry.exercises.forEach(ex => {
-      const vol = ex.sets.reduce((a, s) => a + s.weight * s.reps, 0);
-      bodyHtml += `
-        <div class="mb-4">
-          <div class="flex items-center justify-between mb-1.5">
-            <span class="font-body font-semibold text-sm text-gray-300">${ex.name}</span>
-            <span class="font-mono text-xs text-gray-600">${vol.toFixed(0)} kg vol</span>
-          </div>
-          <div class="grid grid-cols-3 gap-1.5">
-            ${ex.sets.map(s => `
-              <div class="bg-cyber-surface border border-cyber-border/50 rounded p-2 text-center ${s.done ? 'border-green-500/20' : ''}">
-                <div class="font-mono text-xs text-gray-500 mb-1">SET ${s.setNum}</div>
-                <div class="font-mono text-sm font-bold ${s.weight > 0 ? 'text-gray-200' : 'text-gray-600'}">${s.weight || '—'} <span class="text-[10px] text-gray-600">kg</span></div>
-                <div class="font-mono text-xs ${s.reps > 0 ? 'text-gray-400' : 'text-gray-700'}">${s.reps || '—'} reps</div>
-                ${s.done ? '<div class="mt-1"><span class="font-mono text-[9px] text-green-500 tracking-wider">✓ DONE</span></div>' : ''}
-              </div>`).join('')}
-          </div>
-        </div>`;
-    });
-
-    document.getElementById('modal-body').innerHTML = bodyHtml;
-    const backdrop = document.getElementById('modal-backdrop');
-    backdrop.classList.remove('hidden');
-    backdrop.classList.add('flex');
-  },
-
-  closeModal(e) {
-    const backdrop = document.getElementById('modal-backdrop');
-    backdrop.classList.add('hidden');
-    backdrop.classList.remove('flex');
-  },
-
-  clearHistory() {
-    if (!confirm('Clear all workout history? This cannot be undone.')) return;
-    State.history = [];
-    State.save();
-    this.renderHistory();
-    App.toast('History cleared', 'neutral');
-  },
-
-  // ── Analytics ──
-  runAnalytics() {
-    const startVal = document.getElementById('analytics-start').value;
-    const endVal   = document.getElementById('analytics-end').value;
-    const output   = document.getElementById('analytics-output');
-
-    if (!startVal || !endVal) {
-      App.toast('Please select both dates', 'error');
-      return;
-    }
-    const startDate = new Date(startVal);
-    const endDate   = new Date(endVal);
-    endDate.setHours(23, 59, 59);
-
-    if (startDate > endDate) {
-      App.toast('Start must be before end date', 'error');
-      return;
+        cleanText = cleanText + macroTags;
+        showToast(`✓ تم إضافة الماكرو للتتبع اليومي`);
+      } catch {}
     }
 
-    const filtered = State.history.filter(e => {
-      const d = new Date(e.timestamp);
-      return d >= startDate && d <= endDate;
-    }).reverse(); // oldest first for progression
+    typingEl.remove();
+    appendChatMessage('ai', cleanText, true);
+    chatHistory.push({ role: 'model', parts: [{ text: rawText }] });
 
-    if (filtered.length === 0) {
-      output.innerHTML = `<div class="text-center py-12 text-gray-600">
-        <p class="font-mono text-sm tracking-widest">NO DATA IN SELECTED RANGE</p>
-      </div>`;
-      return;
+  } catch (err) {
+    typingEl.remove();
+    let errorMsg = 'حدث خطأ في الاتصال. تأكد من صحة مفتاح Gemini API.';
+    if (err.message?.includes('API_KEY_INVALID') || err.message?.includes('API key')) {
+      errorMsg = '⚠️ مفتاح API غير صحيح. تحقق من المفتاح في صفحة الملف الشخصي.';
     }
-
-    // ── Volume over time ──
-    const volumeByDate = {};
-    filtered.forEach(e => {
-      const d = e.date;
-      if (!volumeByDate[d]) volumeByDate[d] = { anterior:0, posterior:0 };
-      volumeByDate[d][e.type] = (volumeByDate[d][e.type] || 0) + (e.totalVolume || 0);
-    });
-
-    // ── Per-exercise strength progression ──
-    const exProgress = {}; // { exId: { name, muscle, first: {w, date}, last: {w, date} } }
-    filtered.forEach(entry => {
-      entry.exercises.forEach(ex => {
-        const maxW = ex.sets.reduce((a, s) => Math.max(a, s.weight), 0);
-        if (maxW === 0) return;
-        if (!exProgress[ex.id]) {
-          exProgress[ex.id] = { name: ex.name, muscle: ex.muscle, first: null, last: null };
-        }
-        if (!exProgress[ex.id].first) exProgress[ex.id].first = { weight: maxW, date: entry.date };
-        exProgress[ex.id].last = { weight: maxW, date: entry.date };
-      });
-    });
-
-    // ── Stats summary ──
-    const totalWorkouts = filtered.length;
-    const totalVol = filtered.reduce((a, e) => a + (e.totalVolume || 0), 0);
-    const anteriorCount  = filtered.filter(e => e.type === 'anterior').length;
-    const posteriorCount = filtered.filter(e => e.type === 'posterior').length;
-
-    // ── Chart SVG (simple bar chart for volume) ──
-    const dates = Object.keys(volumeByDate).sort();
-    const maxVol = Math.max(...dates.map(d => volumeByDate[d].anterior + volumeByDate[d].posterior), 1);
-    const chartW = 700; const chartH = 120; const barW = Math.max(6, Math.floor((chartW - 40) / (dates.length + 1)));
-    let bars = '';
-    dates.forEach((d, i) => {
-      const totalV = (volumeByDate[d].anterior || 0) + (volumeByDate[d].posterior || 0);
-      const antV   = volumeByDate[d].anterior || 0;
-      const postV  = volumeByDate[d].posterior || 0;
-      const h      = Math.round((totalV / maxVol) * 100);
-      const hA     = Math.round((antV  / maxVol) * 100);
-      const hP     = Math.round((postV / maxVol) * 100);
-      const x      = 20 + i * (barW + 4);
-      const label  = d.slice(5); // MM-DD
-      bars += `<g>
-        ${antV > 0  ? `<rect x="${x}" y="${chartH - hA}"  width="${barW}" height="${hA}"  fill="#f59e0b" fill-opacity="0.7" rx="2"/>` : ''}
-        ${postV > 0 ? `<rect x="${x}" y="${chartH - hA - hP}" width="${barW}" height="${hP}" fill="#3b82f6" fill-opacity="0.7" rx="2"/>` : ''}
-        <text x="${x + barW/2}" y="${chartH + 14}" text-anchor="middle" font-size="8" fill="#6b7280" font-family="Share Tech Mono">${label}</text>
-      </g>`;
-    });
-
-    // ── Build comparison table ──
-    const rows = Object.values(exProgress).map(ex => {
-      const start   = ex.first?.weight || 0;
-      const current = ex.last?.weight  || 0;
-      const diff    = current - start;
-      const pct     = start > 0 ? ((diff / start) * 100).toFixed(1) : '—';
-      const sign    = diff > 0 ? '+' : '';
-      const cls     = diff > 0 ? 'positive' : diff < 0 ? 'negative' : 'neutral';
-      return `<tr class="border-b border-cyber-border/30 last:border-0 hover:bg-cyber-surface/50 transition-colors">
-        <td class="py-2.5 px-3 font-body text-sm text-gray-300">${ex.name}</td>
-        <td class="py-2.5 px-3 font-mono text-xs text-gray-500 hidden sm:table-cell">${ex.muscle}</td>
-        <td class="py-2.5 px-3 font-mono text-sm text-gray-400 text-right">${start} kg</td>
-        <td class="py-2.5 px-3 font-mono text-sm text-gray-200 text-right font-bold">${current} kg</td>
-        <td class="py-2.5 px-3 font-mono text-sm text-right font-bold ${cls}">${sign}${diff} kg</td>
-        <td class="py-2.5 px-3 font-mono text-sm text-right font-bold ${cls}">${pct !== '—' ? sign + pct + '%' : '—'}</td>
-      </tr>`;
-    }).join('');
-
-    output.innerHTML = `
-      <div class="space-y-5 animate-slide-up">
-
-        <!-- Summary Cards -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          ${[
-            { label:'WORKOUTS', val: totalWorkouts, sub: 'in range' },
-            { label:'TOTAL VOLUME', val: (totalVol/1000).toFixed(1)+'t', sub: 'kg×reps' },
-            { label:'ANTERIOR', val: anteriorCount, sub: 'sessions' },
-            { label:'POSTERIOR', val: posteriorCount, sub: 'sessions' },
-          ].map(s => `
-            <div class="bg-cyber-card border border-cyber-border rounded-lg p-3 clip-card-sm">
-              <div class="font-mono text-[10px] text-gray-600 tracking-widest mb-1">${s.label}</div>
-              <div class="font-display text-xl font-black text-amber-400">${s.val}</div>
-              <div class="font-mono text-[10px] text-gray-600 mt-0.5">${s.sub}</div>
-            </div>`).join('')}
-        </div>
-
-        <!-- Volume Chart -->
-        <div class="bg-cyber-card border border-cyber-border rounded-lg p-4 clip-card-sm">
-          <div class="flex items-center justify-between mb-3">
-            <span class="font-mono text-xs text-cyber-muted tracking-widest">// VOLUME OVER TIME</span>
-            <div class="flex items-center gap-3 font-mono text-[10px]">
-              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-amber-500 inline-block"></span> ANT</span>
-              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-blue-500 inline-block"></span> POST</span>
-            </div>
-          </div>
-          ${dates.length > 0
-            ? `<div class="overflow-x-auto">
-                <svg viewBox="0 0 ${Math.max(chartW, dates.length * (barW+4) + 40)} ${chartH + 24}"
-                     class="w-full" style="min-width:200px; height:${chartH+28}px">
-                  <line x1="0" y1="${chartH}" x2="${chartW}" y2="${chartH}" stroke="#1f2937" stroke-width="1"/>
-                  ${bars}
-                </svg>
-               </div>`
-            : '<p class="font-mono text-xs text-gray-600">No data</p>'
-          }
-        </div>
-
-        <!-- Strength Progression Table -->
-        <div class="bg-cyber-card border border-cyber-border rounded-lg overflow-hidden clip-card-sm">
-          <div class="px-4 py-3 border-b border-cyber-border">
-            <span class="font-mono text-xs text-cyber-muted tracking-widest">// STRENGTH PROGRESSION</span>
-          </div>
-          ${rows
-            ? `<div class="overflow-x-auto">
-                <table class="w-full">
-                  <thead>
-                    <tr class="border-b border-cyber-border/50">
-                      <th class="py-2 px-3 text-left font-mono text-[10px] text-gray-600 tracking-widest">EXERCISE</th>
-                      <th class="py-2 px-3 text-left font-mono text-[10px] text-gray-600 tracking-widest hidden sm:table-cell">MUSCLE</th>
-                      <th class="py-2 px-3 text-right font-mono text-[10px] text-gray-600 tracking-widest">START</th>
-                      <th class="py-2 px-3 text-right font-mono text-[10px] text-gray-600 tracking-widest">CURRENT</th>
-                      <th class="py-2 px-3 text-right font-mono text-[10px] text-gray-600 tracking-widest">DIFF</th>
-                      <th class="py-2 px-3 text-right font-mono text-[10px] text-gray-600 tracking-widest">GROWTH</th>
-                    </tr>
-                  </thead>
-                  <tbody>${rows}</tbody>
-                </table>
-               </div>`
-            : '<p class="font-mono text-xs text-gray-600 px-4 py-6">No weight data recorded</p>'
-          }
-        </div>
-
-      </div>`;
-  },
-
-  // ── Toast ──
-  toast(msg, type = 'success') {
-    const toast = document.getElementById('toast');
-    const inner = document.getElementById('toast-inner');
-    const icon  = document.getElementById('toast-icon');
-    const msgEl = document.getElementById('toast-msg');
-
-    inner.className = inner.className
-      .replace(/border-\S+/g,'').replace(/text-\S+/g,'').trim();
-
-    if (type === 'success') {
-      inner.classList.add('border-green-500/40','text-green-400');
-      icon.textContent = '✓';
-    } else if (type === 'error') {
-      inner.classList.add('border-red-500/40','text-red-400');
-      icon.textContent = '✕';
-    } else {
-      inner.classList.add('border-gray-600','text-gray-400');
-      icon.textContent = '–';
-    }
-    // Re-apply base classes
-    inner.className = `flex items-center gap-3 px-5 py-3 bg-cyber-card border rounded-lg font-mono text-sm font-bold tracking-wide shadow-lg ` + inner.className.split(' ').slice(-2).join(' ');
-
-    msgEl.textContent = msg;
-    toast.classList.add('show');
-    clearTimeout(App._toastTimer);
-    App._toastTimer = setTimeout(() => toast.classList.remove('show'), 3000);
+    appendChatMessage('ai', errorMsg);
   }
 
-};
+  sendBtn.disabled = false;
+}
 
-// ── Bootstrap ──
-document.addEventListener('DOMContentLoaded', () => App.init());
+function appendChatMessage(role, html, isHtml = false) {
+  const container = document.getElementById('chat-messages');
+  const el = document.createElement('div');
+  el.className = role === 'user' ? 'chat-user' : 'chat-ai';
+  el.style.opacity = '0';
+  el.style.transform = 'translateY(6px)';
+  el.style.transition = 'all 0.3s';
+  if (role === 'ai') {
+    el.innerHTML = `<div style="font-size: 11px; color: #4a6070; margin-bottom: 4px; font-family: 'JetBrains Mono';">DevGainz AI</div>${isHtml ? html : escapeHtml(html)}`;
+  } else {
+    el.textContent = html;
+  }
+  container.appendChild(el);
+  requestAnimationFrame(() => {
+    el.style.opacity = '1';
+    el.style.transform = 'translateY(0)';
+  });
+  scrollChatToBottom();
+}
+
+function scrollChatToBottom() {
+  const el = document.getElementById('chat-messages');
+  setTimeout(() => { el.scrollTop = el.scrollHeight; }, 50);
+}
+
+function clearChat() {
+  const container = document.getElementById('chat-messages');
+  container.innerHTML = `
+    <div class="chat-ai">
+      <div style="font-size: 12px; color: #4a6070; margin-bottom: 4px; font-family: 'JetBrains Mono';">DevGainz AI</div>
+      مرحباً مجدداً 💪 جاهز لتتبع وجباتك!
+    </div>`;
+  chatHistory = [];
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+}
+
+// ================================================================
+// ANALYTICS ENGINE
+// ================================================================
+function runAnalytics() {
+  const from = document.getElementById('date-from').value;
+  const to = document.getElementById('date-to').value;
+  if (!from || !to) return showToast('⚠️ اختر نطاق التاريخ');
+
+  const results = document.getElementById('analytics-results');
+  results.classList.remove('hidden');
+
+  // Collect all history logs in range
+  const logs = {};
+  for (let key in localStorage) {
+    if (!key.startsWith('devgainz_history_')) continue;
+    const parts = key.replace('devgainz_history_', '').split('_');
+    const date = parts[0];
+    if (date < from || date > to) continue;
+    const entry = safeGet(key);
+    if (!entry) continue;
+    if (!logs[entry.exId]) logs[entry.exId] = { name: entry.exName, sessions: [] };
+    logs[entry.exId].sessions.push({ date, sets: entry.sets });
+  }
+
+  // Compute total volume
+  let totalVolume = 0;
+  const strengthData = {};
+
+  Object.entries(logs).forEach(([exId, data]) => {
+    const volumes = data.sessions.map(s => s.sets.reduce((acc, set) => acc + (set.volume || 0), 0));
+    const maxWeight = data.sessions.flatMap(s => s.sets.map(set => set.weight || 0)).reduce((a, b) => Math.max(a, b), 0);
+    const firstMax = data.sessions[0]?.sets.reduce((a, b) => Math.max(a, b.weight || 0), 0) || 0;
+    const lastMax = data.sessions[data.sessions.length - 1]?.sets.reduce((a, b) => Math.max(a, b.weight || 0), 0) || 0;
+    const vol = volumes.reduce((a, b) => a + b, 0);
+    totalVolume += vol;
+    if (firstMax > 0) strengthData[exId] = { name: data.name, first: firstMax, last: lastMax };
+  });
+
+  // Weight change
+  const profile = safeGet('devgainz_profile', { weight: 79 });
+  document.getElementById('res-weight-change').textContent = `${profile.weight || 79}kg`;
+
+  // Best strength improvement
+  let bestGrowth = 0;
+  let bestEx = '';
+  Object.entries(strengthData).forEach(([id, d]) => {
+    if (d.first > 0) {
+      const growth = ((d.last - d.first) / d.first) * 100;
+      if (growth > bestGrowth) { bestGrowth = growth; bestEx = d.name; }
+    }
+  });
+  document.getElementById('res-strength').textContent = bestGrowth > 0 ? `+${bestGrowth.toFixed(1)}%` : 'لا بيانات';
+  document.getElementById('res-volume').textContent = `${(totalVolume/1000).toFixed(1)}T`;
+
+  // Detailed breakdown
+  const detail = document.getElementById('analytics-detail');
+  detail.innerHTML = '';
+  Object.entries(strengthData).forEach(([id, d]) => {
+    const growth = d.first > 0 ? ((d.last - d.first) / d.first * 100).toFixed(1) : 0;
+    const color = growth > 0 ? '#00ff87' : growth < 0 ? '#ff3b5c' : '#4a6070';
+    const div = document.createElement('div');
+    div.className = 'flex items-center justify-between p-2 rounded-xl';
+    div.style.cssText = 'background: rgba(255,255,255,0.02); border: 1px solid #1e2d42;';
+    div.innerHTML = `
+      <span style="font-size: 12px; color: #8fabbe;">${d.name}</span>
+      <div class="flex items-center gap-2">
+        <span style="font-family: 'JetBrains Mono'; font-size: 11px; color: #4a6070;">${d.first}→${d.last}kg</span>
+        <span class="badge" style="background: ${color}15; color: ${color}; border: 1px solid ${color}33;">${growth > 0 ? '+' : ''}${growth}%</span>
+      </div>`;
+    detail.appendChild(div);
+  });
+
+  if (Object.keys(strengthData).length === 0) {
+    detail.innerHTML = '<div style="text-align: center; color: #4a6070; font-size: 12px; padding: 12px;">لا توجد بيانات في هذه الفترة بعد.</div>';
+  }
+}
+
+function computeTotalVolume() {
+  let total = 0;
+  for (let key in localStorage) {
+    if (!key.startsWith('devgainz_history_')) continue;
+    const entry = safeGet(key);
+    if (entry?.sets) total += entry.sets.reduce((acc, s) => acc + (s.volume || 0), 0);
+  }
+  const el = document.getElementById('analytics-volume');
+  if (el) el.textContent = (total / 1000).toFixed(1) + 'T';
+}
+
+// ================================================================
+// WORKOUT HISTORY RENDER
+// ================================================================
+function renderWorkoutHistory() {
+  const container = document.getElementById('workout-history');
+  const entries = [];
+
+  for (let key in localStorage) {
+    if (!key.startsWith('devgainz_history_')) continue;
+    const entry = safeGet(key);
+    if (entry) entries.push({ key, ...entry });
+  }
+
+  if (entries.length === 0) {
+    container.innerHTML = '<div style="text-align: center; color: #4a6070; font-size: 13px; padding: 20px;">لا يوجد سجل بعد. أكمل أول تمرين!</div>';
+    return;
+  }
+
+  entries.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+  container.innerHTML = entries.slice(0, 30).map(e => {
+    const date = new Date(e.timestamp);
+    const dateStr = `${date.getDate()}/${date.getMonth()+1}/${date.getFullYear()}`;
+    const vol = e.sets ? e.sets.reduce((acc, s) => acc + (s.volume || 0), 0).toFixed(1) : 0;
+    const maxW = e.sets ? Math.max(...e.sets.map(s => s.weight || 0)) : 0;
+    const dayLabel = e.day === 'anterior' ? 'أمامي' : 'خلفي';
+
+    return `
+      <div class="flex items-center justify-between p-3 rounded-xl" style="background: rgba(255,255,255,0.02); border: 1px solid #1e2d42;">
+        <div>
+          <div style="font-size: 13px; font-weight: 600; color: #e8f4f8;">${e.exName || e.exId}</div>
+          <div class="flex items-center gap-2 mt-1">
+            <span class="badge badge-cyan" style="font-size: 9px;">${dayLabel}</span>
+            <span style="font-size: 10px; color: #4a6070; font-family: 'JetBrains Mono';">${dateStr}</span>
+          </div>
+        </div>
+        <div class="text-right">
+          <div style="font-family: 'JetBrains Mono'; font-size: 12px; font-weight: 700; color: #00e5ff;">${maxW}kg</div>
+          <div style="font-size: 9px; color: #4a6070;">Vol: ${vol}kg</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ================================================================
+// ACCORDION
+// ================================================================
+function toggleAccordion(id) {
+  const el = document.getElementById(id);
+  const icon = document.getElementById(`icon-${id}`);
+  el.classList.toggle('open');
+  if (icon) icon.style.transform = el.classList.contains('open') ? 'rotate(180deg)' : 'rotate(0)';
+}
+
+// ================================================================
+// TOAST
+// ================================================================
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.style.opacity = '1';
+  toast.style.transform = 'translateX(-50%) translateY(0)';
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateX(-50%) translateY(20px)';
+  }, 2800);
+}
 </script>
-
 </body>
 </html>
